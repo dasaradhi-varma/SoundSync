@@ -127,8 +127,9 @@ class OutputDeviceWorker(threading.Thread):
             except (queue.Empty, queue.Full):
                 pass
 
-    def run(self):
-        logger.info(f"Starting output stream for '{self.device_name}' (idx {self.device_index}, sr {self.sample_rate}, ch {self.channels})")
+    def open_stream(self) -> bool:
+        """Opens output audio stream synchronously before thread launch."""
+        logger.info(f"Opening output stream for '{self.device_name}' (idx {self.device_index}, sr {self.sample_rate}, ch {self.channels})")
         try:
             self.stream = self.p_inst.open(
                 format=pyaudio.paFloat32,
@@ -138,11 +139,28 @@ class OutputDeviceWorker(threading.Thread):
                 output_device_index=self.device_index,
                 frames_per_buffer=self.frames_per_buffer
             )
+            return True
         except Exception as e:
             self.error_message = str(e)
             logger.error(f"Failed to open audio stream for {self.device_name}: {e}")
-            self.running = False
-            return
+            return False
+
+    def close_stream(self):
+        """Safely stops and closes output stream."""
+        try:
+            if self.stream:
+                self.stream.stop_stream()
+                self.stream.close()
+        except Exception:
+            pass
+        self.stream = None
+        logger.info(f"Output stream stopped for '{self.device_name}'")
+
+    def run(self):
+        if not self.stream:
+            if not self.open_stream():
+                self.running = False
+                return
 
         self.running = True
 
@@ -157,7 +175,8 @@ class OutputDeviceWorker(threading.Thread):
                 self.current_level = 0.0
                 try:
                     silence = np.zeros((len(raw_chunk), self.channels), dtype=np.float32).tobytes()
-                    self.stream.write(silence)
+                    if self.stream:
+                        self.stream.write(silence)
                 except Exception:
                     pass
                 continue
@@ -201,19 +220,13 @@ class OutputDeviceWorker(threading.Thread):
 
                 # 7. Stream to Windows Audio endpoint
                 data_bytes = chunk.tobytes()
-                self.stream.write(data_bytes)
+                if self.stream:
+                    self.stream.write(data_bytes)
             except Exception as e:
                 logger.warning(f"Write error on {self.device_name}: {e}")
                 time.sleep(0.01)
 
-        # Cleanup
-        try:
-            if self.stream:
-                self.stream.stop_stream()
-                self.stream.close()
-        except Exception:
-            pass
-        logger.info(f"Output stream stopped for '{self.device_name}'")
+        self.close_stream()
 
     def stop(self):
         self.running = False
@@ -248,6 +261,14 @@ class AudioRouter:
         self.frames_per_buffer: int = 1024
         self.spectrum_bands: List[float] = [0.0] * 20
         self.soloed_device_id: Optional[int] = None
+
+        self.selected_source_index: Optional[int] = None # None means auto-track default
+        self.current_source_device_index: Optional[int] = None
+        self.loopback_map: Dict[int, dict] = {} # output_idx -> loopback_dev_dict
+
+        self.keep_alive_running: bool = False
+        self.keep_alive_stream: Optional[pyaudio.Stream] = None
+        self.keep_alive_thread: Optional[threading.Thread] = None
 
         self.lock = threading.RLock()
         self.init_audio_system()
@@ -315,6 +336,19 @@ class AudioRouter:
                         break
             if not self.default_loopback_device and loopback_devices:
                 self.default_loopback_device = list(loopback_devices.values())[0]
+
+            # Build loopback map: output_index -> loopback_device
+            self.loopback_map = {}
+            for out_idx in range(dev_count):
+                try:
+                    d = self.p.get_device_info_by_index(out_idx)
+                    if d['hostApi'] == wasapi_idx and d['maxOutputChannels'] > 0:
+                        for lb_name, lb_dev in loopback_devices.items():
+                            if d['name'] in lb_name:
+                                self.loopback_map[d['index']] = lb_dev
+                                break
+                except Exception:
+                    pass
 
             # Output devices
             devices = []
@@ -440,11 +474,9 @@ class AudioRouter:
         if not dev_info:
             return
 
-        is_default = dev_info['is_default']
-        # In mirror mode, Windows already plays audio to default device natively.
-        # So we skip default device worker in mirror mode to prevent double audio/echo!
-        if self.mirror_mode == "mirror" and is_default:
-            logger.info(f"Mirror mode active: Default output '{dev_info['name']}' plays natively. Skipping worker duplicate.")
+        # Never duplicate capture source back into itself to prevent feedback loop / device collision!
+        if dev_index == self.current_source_device_index:
+            logger.info(f"Skipping worker duplicate on capture source '{dev_info['name']}'.")
             return
 
         cfg = self.device_configs.get(dev_index, {})
@@ -459,8 +491,111 @@ class AudioRouter:
             delay_ms=cfg.get('delay_ms', 0.0),
             pan=cfg.get('pan', 0.0)
         )
-        worker.start()
-        self.workers[dev_index] = worker
+        if worker.open_stream():
+            worker.start()
+            self.workers[dev_index] = worker
+        else:
+            logger.warning(f"Could not open output stream for '{dev_info['name']}'")
+
+    def _start_keep_alive(self, dev_index: int):
+        """Starts a background silence feeder stream on source device to guarantee active clock ticks."""
+        self._stop_keep_alive()
+        self.keep_alive_running = True
+        silence = np.zeros((1024, self.channels), dtype=np.float32).tobytes()
+
+        try:
+            self.keep_alive_stream = self.p.open(
+                format=pyaudio.paFloat32,
+                channels=self.channels,
+                rate=self.sample_rate,
+                output=True,
+                output_device_index=dev_index,
+                frames_per_buffer=1024
+            )
+            # Write 2 frames of silence to prime driver clock immediately
+            for _ in range(2):
+                self.keep_alive_stream.write(silence)
+        except Exception as e:
+            logger.debug(f"Keep-alive feeder init note on {dev_index}: {e}")
+            self.keep_alive_stream = None
+            return
+
+        def _feeder():
+            while self.keep_alive_running and self.keep_alive_stream:
+                try:
+                    self.keep_alive_stream.write(silence)
+                    time.sleep(0.015)
+                except Exception:
+                    break
+
+        self.keep_alive_thread = threading.Thread(target=_feeder, name="KeepAliveFeeder", daemon=True)
+        self.keep_alive_thread.start()
+
+    def _stop_keep_alive(self):
+        """Stops the silence feeder stream cleanly."""
+        self.keep_alive_running = False
+        if self.keep_alive_thread and self.keep_alive_thread.is_alive():
+            try:
+                self.keep_alive_thread.join(timeout=0.3)
+            except Exception:
+                pass
+        self.keep_alive_thread = None
+
+        try:
+            if self.keep_alive_stream:
+                self.keep_alive_stream.stop_stream()
+                self.keep_alive_stream.close()
+        except Exception:
+            pass
+        self.keep_alive_stream = None
+
+    def set_source_device(self, dev_index: Optional[int]):
+        """Sets the audio capture source line and dynamically hot-switches if broadcasting."""
+        with self.lock:
+            self.selected_source_index = dev_index
+            if self.is_broadcasting:
+                logger.info(f"Hot-switching capture source to: {dev_index}")
+                self.stop_broadcast()
+                time.sleep(0.1)
+                self.start_broadcast()
+
+    def _recover_capture_stream(self):
+        """Auto-recovers when Windows audio switches lines or invalidates stream."""
+        with self.lock:
+            try:
+                if self.capture_stream:
+                    try:
+                        self.capture_stream.stop_stream()
+                        self.capture_stream.close()
+                    except Exception:
+                        pass
+                    self.capture_stream = None
+
+                self.refresh_devices()
+                src_dev = None
+                if self.selected_source_index is not None:
+                    for d in self.all_devices:
+                        if d['index'] == self.selected_source_index:
+                            src_dev = d
+                            break
+                if not src_dev:
+                    src_dev = self.default_output_device or (self.all_devices[0] if self.all_devices else None)
+
+                if src_dev:
+                    lb = self.loopback_map.get(src_dev['index'])
+                    if lb:
+                        self._start_keep_alive(src_dev['index'])
+                        self.capture_stream = self.p.open(
+                            format=pyaudio.paFloat32,
+                            channels=self.channels,
+                            rate=self.sample_rate,
+                            input=True,
+                            input_device_index=lb['index'],
+                            frames_per_buffer=self.frames_per_buffer
+                        )
+                        logger.info(f"Auto-recovery successful: loopback re-attached to {lb['name']}")
+            except Exception as rec_err:
+                logger.debug(f"Recovery attempt error: {rec_err}")
 
     def start_broadcast(self) -> bool:
         """Starts WASAPI loopback capture and initiates multi-device streaming workers."""
@@ -469,15 +604,49 @@ class AudioRouter:
                 return True
 
             self.refresh_devices()
-            if not self.default_loopback_device:
-                logger.error("No loopback device found for broadcast capture.")
+
+            # Determine source output device
+            src_dev = None
+            if self.selected_source_index is not None:
+                for d in self.all_devices:
+                    if d['index'] == self.selected_source_index:
+                        src_dev = d
+                        break
+
+            if not src_dev:
+                src_dev = self.default_output_device
+
+            if not src_dev and self.all_devices:
+                src_dev = self.all_devices[0]
+
+            if not src_dev:
+                logger.error("No audio device available for capture.")
                 return False
 
-            lb = self.default_loopback_device
+            self.current_source_device_index = src_dev['index']
+
+            # Match loopback device
+            lb = self.loopback_map.get(src_dev['index'])
+            if not lb:
+                for loop in self.p.get_loopback_device_info_generator():
+                    if src_dev['name'] in loop['name']:
+                        lb = loop
+                        break
+
+            if not lb:
+                lb = self.default_loopback_device
+
+            if not lb:
+                logger.error(f"No loopback device found for '{src_dev['name']}'")
+                return False
+
             logger.info(f"Attaching WASAPI loopback capture to: {lb['name']} (index {lb['index']})")
 
             self.sample_rate = int(lb['defaultSampleRate'])
             self.channels = min(2, lb['maxInputChannels'])
+
+            # Start keep-alive feeder on capture source to guarantee active driver clock (prevents VAC hanging)
+            self._start_keep_alive(src_dev['index'])
 
             try:
                 self.capture_stream = self.p.open(
@@ -490,9 +659,10 @@ class AudioRouter:
                 )
             except Exception as e:
                 logger.error(f"Failed to open loopback capture stream: {e}")
+                self._stop_keep_alive()
                 return False
 
-            # Start workers for all enabled devices
+            # Start workers for all enabled devices (skipping capture source)
             self.workers.clear()
             for dev in self.all_devices:
                 idx = dev['index']
@@ -503,7 +673,7 @@ class AudioRouter:
             self.is_broadcasting = True
             self.capture_thread = threading.Thread(target=self._capture_loop, name="LoopbackCaptureThread", daemon=True)
             self.capture_thread.start()
-            logger.info("Broadcasting started successfully across all target devices.")
+            logger.info(f"Broadcasting started successfully from '{src_dev['name']}' to active targets.")
             return True
 
     def _capture_loop(self):
@@ -555,8 +725,9 @@ class AudioRouter:
 
             except Exception as e:
                 if self.is_broadcasting:
-                    logger.warning(f"Loopback read exception: {e}")
-                    time.sleep(0.01)
+                    logger.warning(f"Capture stream notice ({e}). Auto-recovering...")
+                    time.sleep(0.15)
+                    self._recover_capture_stream()
 
         self.master_level = 0.0
         self.spectrum_bands = [0.0] * 20
@@ -574,8 +745,12 @@ class AudioRouter:
                 self.capture_thread.join(timeout=0.3)
             except Exception:
                 pass
+        self.capture_thread = None
 
         with self.lock:
+            # Stop keep-alive clock feeder
+            self._stop_keep_alive()
+
             # Close capture stream safely
             try:
                 if self.capture_stream:
@@ -591,9 +766,16 @@ class AudioRouter:
             except Exception as e:
                 logger.warning(f"Error closing capture stream: {e}")
 
-            # Signal workers to stop
+            # Signal workers to stop and safely close streams
             for worker in list(self.workers.values()):
                 worker.stop()
+            for worker in list(self.workers.values()):
+                if worker.is_alive():
+                    try:
+                        worker.join(timeout=0.3)
+                    except Exception:
+                        pass
+                worker.close_stream()
             self.workers.clear()
             self.master_level = 0.0
             logger.info("Broadcasting stopped.")
@@ -696,6 +878,8 @@ class AudioRouter:
             'sample_rate': self.sample_rate,
             'default_output': self.default_output_device['name'] if self.default_output_device else None,
             'default_loopback': self.default_loopback_device['name'] if self.default_loopback_device else None,
+            'selected_source_index': self.selected_source_index,
+            'current_source_device_index': self.current_source_device_index,
             'devices': self.all_devices,
             'soloed_device_id': self.soloed_device_id
         }

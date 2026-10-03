@@ -129,6 +129,17 @@ def apply_preset(preset_name):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/source/select', methods=['POST'])
+def select_source():
+    try:
+        data = request.json or {}
+        src_id = data.get('source_device_index')
+        audio_engine.set_source_device(src_id)
+        return jsonify({'success': True, 'status': audio_engine.get_status()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/test_tone', methods=['POST'])
 def test_tone():
     try:

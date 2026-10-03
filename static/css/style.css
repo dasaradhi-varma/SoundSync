@@ -489,11 +489,11 @@ body.studio-dark {
 .source-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.75rem;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.04);
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
@@ -501,6 +501,41 @@ body.studio-dark {
 .source-indicator {
   color: var(--accent-green);
   font-size: 0.65rem;
+  animation: pulse-dot 1.5s infinite;
+}
+
+.source-label-txt {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.source-select-dropdown {
+  background: #090d16;
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  color: var(--accent-cyan);
+  font-family: var(--font-display);
+  font-size: 0.775rem;
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  cursor: pointer;
+  outline: none;
+  max-width: 200px;
+  text-overflow: ellipsis;
+  transition: all var(--transition-fast);
+}
+
+.source-select-dropdown:hover,
+.source-select-dropdown:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+}
+
+.source-select-dropdown option {
+  background: #090d16;
+  color: #f8fafc;
 }
 
 .source-format {

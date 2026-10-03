@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const spectrumCanvas = document.getElementById('spectrum-canvas');
   const ctx = spectrumCanvas ? spectrumCanvas.getContext('2d') : null;
 
-  const sourceNameDisplay = document.getElementById('source-name-display');
+  const sourceSelect = document.getElementById('source-select');
   const deviceCountPill = document.getElementById('device-count-pill');
   const soloAlertBanner = document.getElementById('solo-alert-banner');
   const btnClearSolo = document.getElementById('btn-clear-solo');
@@ -129,6 +129,29 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Routing Mode: ${mode === 'mirror' ? 'Smart Mirror' : 'Multi-Direct'}`);
       });
     });
+
+    // Audio Capture Source Line Dropdown
+    if (sourceSelect) {
+      sourceSelect.addEventListener('change', async (e) => {
+        const val = e.target.value;
+        const srcId = val === 'auto' ? null : parseInt(val, 10);
+        showToast(val === 'auto' ? 'Capture source: Windows Default' : `Capture source: Switching line...`);
+        try {
+          const res = await fetch('/api/source/select', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source_device_index: srcId })
+          });
+          const data = await res.json();
+          if (data.success) {
+            updateUIState(data.status);
+            showToast('Capture source line updated!');
+          }
+        } catch (err) {
+          showToast('Could not switch capture source');
+        }
+      });
+    }
 
     // Presets Bar (Tri-Party, Cinema Sync, Balanced)
     document.querySelectorAll('.preset-chip').forEach(chip => {
@@ -341,9 +364,25 @@ document.addEventListener('DOMContentLoaded', () => {
       statusPillText.textContent = 'STANDBY';
     }
 
-    // Source Info
-    if (state.default_output) {
-      sourceNameDisplay.textContent = state.default_output;
+    // Source Info & Dropdown
+    if (sourceSelect && state.devices) {
+      const currentSelected = (state.selected_source_index !== null && state.selected_source_index !== undefined)
+        ? String(state.selected_source_index)
+        : 'auto';
+
+      if (document.activeElement !== sourceSelect) {
+        const desiredValues = ['auto', ...state.devices.map(d => String(d.index))];
+        const existingValues = Array.from(sourceSelect.options).map(o => o.value);
+        const match = desiredValues.length === existingValues.length && desiredValues.every((v, i) => v === existingValues[i]);
+        if (!match) {
+          let optionsHtml = `<option value="auto">Auto: Windows Default (${state.default_output || 'Default'})</option>`;
+          state.devices.forEach(d => {
+            optionsHtml += `<option value="${d.index}">${d.name} (${d.category.toUpperCase()})</option>`;
+          });
+          sourceSelect.innerHTML = optionsHtml;
+        }
+        sourceSelect.value = currentSelected;
+      }
     }
 
     // Devices Count
