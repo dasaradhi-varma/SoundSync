@@ -246,6 +246,8 @@ class AudioRouter:
         self.sample_rate: int = 48000
         self.channels: int = 2
         self.frames_per_buffer: int = 1024
+        self.spectrum_bands: List[float] = [0.0] * 20
+        self.soloed_device_id: Optional[int] = None
 
         self.lock = threading.RLock()
         self.init_audio_system()
@@ -523,10 +525,33 @@ class AudioRouter:
                 rms = float(np.sqrt(np.mean(chunk ** 2))) if len(chunk) > 0 else 0.0
                 self.master_level = min(1.0, rms * 3.5)
 
-                # Dispatch copy to each active device worker
-                for worker in list(self.workers.values()):
+                # Real-time FFT spectrum analyzer (20 logarithmic frequency bands)
+                if len(chunk) > 32:
+                    try:
+                        mono = np.mean(chunk, axis=1)
+                        fft_vals = np.abs(np.fft.rfft(mono))
+                        n_bins = len(fft_vals)
+                        edges = np.logspace(np.log10(1), np.log10(n_bins - 1), num=21).astype(int)
+                        bands = []
+                        for bi in range(20):
+                            s = edges[bi]
+                            e = max(s + 1, edges[bi + 1])
+                            val = float(np.mean(fft_vals[s:e]))
+                            bands.append(round(min(1.0, val / 12.0), 3))
+                        self.spectrum_bands = bands
+                    except Exception:
+                        pass
+
+                # Dispatch copy to each active device worker (with Solo support)
+                solo_id = self.soloed_device_id
+                for dev_idx, worker in list(self.workers.items()):
                     if worker.running:
-                        worker.push_audio(chunk.copy())
+                        if solo_id is not None and dev_idx != solo_id:
+                            # Silenced when another device is in solo mode
+                            silence = np.zeros_like(chunk)
+                            worker.push_audio(silence)
+                        else:
+                            worker.push_audio(chunk.copy())
 
             except Exception as e:
                 if self.is_broadcasting:
@@ -534,6 +559,7 @@ class AudioRouter:
                     time.sleep(0.01)
 
         self.master_level = 0.0
+        self.spectrum_bands = [0.0] * 20
 
     def stop_broadcast(self):
         """Stops audio capture and terminates all device worker streams safely."""
@@ -611,8 +637,36 @@ class AudioRouter:
 
         threading.Thread(target=_tone_runner, daemon=True).start()
 
+    def toggle_solo(self, device_id: int) -> Optional[int]:
+        with self.lock:
+            if self.soloed_device_id == device_id:
+                self.soloed_device_id = None
+            else:
+                self.soloed_device_id = device_id
+            return self.soloed_device_id
+
+    def apply_preset(self, preset_name: str) -> dict:
+        with self.lock:
+            if preset_name == "party":
+                # Enable all devices, 100% volume, 0ms delay
+                for d in self.all_devices:
+                    self.set_device_config(d['index'], volume=1.0, muted=False, enabled=True)
+            elif preset_name == "cinema":
+                # Set delay compensation for Bluetooth devices to ~120ms
+                for d in self.all_devices:
+                    if d['category'] == 'bluetooth':
+                        self.set_device_config(d['index'], volume=1.0, muted=False, delay_ms=120.0, enabled=True)
+                    else:
+                        self.set_device_config(d['index'], volume=0.8, muted=False, delay_ms=0.0, enabled=True)
+            elif preset_name == "balanced":
+                # Master 100%, each device 85%, 0 delay
+                self.set_master_config(volume=1.0, muted=False)
+                for d in self.all_devices:
+                    self.set_device_config(d['index'], volume=0.85, muted=False, delay_ms=0.0, enabled=True)
+            return self.get_status()
+
     def get_meter_levels(self) -> dict:
-        """Returns real-time VU meter levels for master and each device."""
+        """Returns real-time VU meter levels, 20-band FFT spectrum, and solo state."""
         device_levels = {}
         for idx, worker in self.workers.items():
             device_levels[idx] = round(worker.current_level, 3)
@@ -626,7 +680,9 @@ class AudioRouter:
         return {
             'is_broadcasting': self.is_broadcasting,
             'master_level': round(self.master_level, 3),
-            'device_levels': device_levels
+            'device_levels': device_levels,
+            'spectrum': self.spectrum_bands,
+            'soloed_device_id': self.soloed_device_id
         }
 
     def get_status(self) -> dict:
@@ -640,7 +696,8 @@ class AudioRouter:
             'sample_rate': self.sample_rate,
             'default_output': self.default_output_device['name'] if self.default_output_device else None,
             'default_loopback': self.default_loopback_device['name'] if self.default_loopback_device else None,
-            'devices': self.all_devices
+            'devices': self.all_devices,
+            'soloed_device_id': self.soloed_device_id
         }
 
 

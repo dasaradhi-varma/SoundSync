@@ -1,94 +1,191 @@
 /**
- * SoundSync Multi-Out - Frontend Application Controller
- * Handles real-time device matrix, VU meter animations, volume & delay sync controls.
+ * SoundSync Multi-Out - Pro Studio Frontend Controller
+ * Hardware-grade Audio Spectrum Visualizer, DAW Channel Strips, Solo Routing, and Keyboard Shortcuts.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
+  // DOM References
   const btnToggleBroadcast = document.getElementById('btn-toggle-broadcast');
-  const broadcastBtnText = document.getElementById('broadcast-btn-text');
-  const broadcastStatusBadge = document.getElementById('broadcast-status-badge');
+  const broadcastBtnLabel = document.getElementById('broadcast-btn-label');
+  const broadcastPill = document.getElementById('broadcast-pill');
+  const statusPillText = document.getElementById('status-pill-text');
+  
   const btnRefresh = document.getElementById('btn-refresh');
   const btnTestAll = document.getElementById('btn-test-all');
+  const btnShortcuts = document.getElementById('btn-shortcuts');
   const btnHelp = document.getElementById('btn-help');
+  
   const guideModal = document.getElementById('guide-modal');
-  const btnCloseModal = document.getElementById('btn-close-modal');
-  const btnModalGotIt = document.getElementById('btn-modal-gotit');
+  const btnCloseGuide = document.getElementById('btn-close-guide');
+  const btnGuideConfirm = document.getElementById('btn-guide-confirm');
   
-  const masterVolumeSlider = document.getElementById('master-volume-slider');
-  const masterVolVal = document.getElementById('master-vol-val');
-  const masterMuteBtn = document.getElementById('master-mute-btn');
-  const masterVuFill = document.getElementById('master-vu-fill');
-  const masterMeterVal = document.getElementById('master-meter-val');
-  
-  const srcDefaultName = document.getElementById('src-default-name');
-  const srcMetaInfo = document.getElementById('src-meta-info');
-  const devicesCount = document.getElementById('devices-count');
-  const devicesContainer = document.getElementById('devices-container');
-  const routingModeRadios = document.querySelectorAll('input[name="routing_mode"]');
-  const toast = document.getElementById('toast');
+  const shortcutsModal = document.getElementById('shortcuts-modal');
+  const btnCloseShortcuts = document.getElementById('btn-close-shortcuts');
 
+  const masterVolumeSlider = document.getElementById('master-volume-slider');
+  const masterGainNum = document.getElementById('master-gain-num');
+  const btnMasterMute = document.getElementById('btn-master-mute');
+  
+  const meterLeftFill = document.getElementById('meter-left-fill');
+  const meterRightFill = document.getElementById('meter-right-fill');
+  const meterLeftPeak = document.getElementById('meter-left-peak');
+  const meterRightPeak = document.getElementById('meter-right-peak');
+  
+  const spectrumCanvas = document.getElementById('spectrum-canvas');
+  const ctx = spectrumCanvas ? spectrumCanvas.getContext('2d') : null;
+
+  const sourceNameDisplay = document.getElementById('source-name-display');
+  const deviceCountPill = document.getElementById('device-count-pill');
+  const soloAlertBanner = document.getElementById('solo-alert-banner');
+  const btnClearSolo = document.getElementById('btn-clear-solo');
+  const channelsContainer = document.getElementById('channels-container');
+  const studioToast = document.getElementById('studio-toast');
+  const toastMessage = document.getElementById('toast-message');
+
+  // Application State
   let appState = {
     is_broadcasting: false,
     master_volume: 1.0,
     master_muted: false,
     mirror_mode: 'mirror',
-    devices: []
+    devices: [],
+    soloed_device_id: null
   };
 
-  let eventSource = null;
-  let meterPollInterval = null;
+  // Visualizer & Metering Physics State
+  const SPECTRUM_BANDS = 20;
+  let currentBands = new Array(SPECTRUM_BANDS).fill(0);
+  let targetBands = new Array(SPECTRUM_BANDS).fill(0);
+  let peakBands = new Array(SPECTRUM_BANDS).fill(0);
+  let peakBandDecay = new Array(SPECTRUM_BANDS).fill(0);
 
-  // Initialize
+  let leftPeakHold = 0;
+  let rightPeakHold = 0;
+
+  let eventSource = null;
+  let fallbackInterval = null;
+
   initApp();
 
   function initApp() {
     setupEventListeners();
+    setupKeyboardShortcuts();
     fetchStatus();
     startMeterStream();
+    startCanvasVisualizerLoop();
   }
+
+  // =========================================================================
+  // Event Listeners & Keyboard Shortcuts
+  // =========================================================================
 
   function setupEventListeners() {
     btnToggleBroadcast.addEventListener('click', toggleBroadcast);
     btnRefresh.addEventListener('click', handleRefreshDevices);
     btnTestAll.addEventListener('click', () => triggerTestTone(null));
-    
-    // Help Modal
-    btnHelp.addEventListener('click', () => guideModal.classList.remove('hidden'));
-    btnCloseModal.addEventListener('click', () => guideModal.classList.add('hidden'));
-    btnModalGotIt.addEventListener('click', () => guideModal.classList.add('hidden'));
-    guideModal.addEventListener('click', (e) => {
-      if (e.target === guideModal) guideModal.classList.add('hidden');
-    });
 
-    // Master Volume
+    // Modals
+    btnHelp.addEventListener('click', () => guideModal.classList.remove('hidden'));
+    btnCloseGuide.addEventListener('click', () => guideModal.classList.add('hidden'));
+    btnGuideConfirm.addEventListener('click', () => guideModal.classList.add('hidden'));
+    guideModal.querySelector('.modal-backdrop').addEventListener('click', () => guideModal.classList.add('hidden'));
+
+    btnShortcuts.addEventListener('click', () => shortcutsModal.classList.remove('hidden'));
+    btnCloseShortcuts.addEventListener('click', () => shortcutsModal.classList.add('hidden'));
+    shortcutsModal.querySelector('.modal-backdrop').addEventListener('click', () => shortcutsModal.classList.add('hidden'));
+
+    // Master Volume Slider
     masterVolumeSlider.addEventListener('input', (e) => {
       const val = parseInt(e.target.value, 10);
-      masterVolVal.textContent = `${val}%`;
+      masterGainNum.textContent = `${val}%`;
       updateMaster({ volume: val / 100.0 });
+      syncGainPresetHighlight(val);
     });
 
     // Master Mute
-    masterMuteBtn.addEventListener('click', () => {
+    btnMasterMute.addEventListener('click', () => {
       const newMuted = !appState.master_muted;
       updateMaster({ muted: newMuted });
     });
 
-    // Volume Presets
-    document.querySelectorAll('.preset-btn').forEach(btn => {
+    // Quick Gain Taps
+    document.querySelectorAll('.gain-tap').forEach(btn => {
       btn.addEventListener('click', () => {
         const vol = parseInt(btn.dataset.vol, 10);
         masterVolumeSlider.value = vol;
-        masterVolVal.textContent = `${vol}%`;
+        masterGainNum.textContent = `${vol}%`;
         updateMaster({ volume: vol / 100.0 });
+        syncGainPresetHighlight(vol);
       });
     });
 
-    // Routing Mode
-    routingModeRadios.forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        updateMaster({ mode: e.target.value });
+    // Mode Selector (Smart Mirror vs Multi-Direct)
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const mode = tab.dataset.mode;
+        updateMaster({ mode: mode });
+        showToast(`Routing Mode: ${mode === 'mirror' ? 'Smart Mirror' : 'Multi-Direct'}`);
       });
+    });
+
+    // Presets Bar (Tri-Party, Cinema Sync, Balanced)
+    document.querySelectorAll('.preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const preset = chip.dataset.preset;
+        applyPreset(preset);
+      });
+    });
+
+    // Clear Solo Banner
+    btnClearSolo.addEventListener('click', () => {
+      if (appState.soloed_device_id !== null) {
+        toggleSolo(appState.soloed_device_id);
+      }
+    });
+  }
+
+  function setupKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      // Ignore if user is inside an input field
+      if (e.target.tagName === 'INPUT' && e.target.type === 'text') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleBroadcast();
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        updateMaster({ muted: !appState.master_muted });
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleRefreshDevices();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        triggerTestTone(null);
+      } else if (e.key === 'Escape') {
+        guideModal.classList.add('hidden');
+        shortcutsModal.classList.add('hidden');
+        if (appState.soloed_device_id !== null) {
+          toggleSolo(appState.soloed_device_id);
+        }
+      } else if (e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key, 10) - 1;
+        if (appState.devices && appState.devices[idx]) {
+          const dev = appState.devices[idx];
+          updateDeviceConfig(dev.index, { enabled: !dev.enabled });
+          const chk = document.getElementById(`switch-${dev.index}`);
+          if (chk) chk.checked = !dev.enabled;
+        }
+      }
+    });
+  }
+
+  function syncGainPresetHighlight(vol) {
+    document.querySelectorAll('.gain-tap').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.vol, 10) === vol);
     });
   }
 
@@ -105,24 +202,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Error fetching status:', err);
-      showToast('Could not connect to audio engine');
+      showToast('Connecting to audio engine...');
     }
   }
 
   async function handleRefreshDevices() {
-    btnRefresh.disabled = true;
-    showToast('Scanning for newly connected Bluetooth & sound devices...');
+    btnRefresh.classList.add('loading');
+    showToast('Scanning Windows Bluetooth & Audio Endpoints...');
     try {
       const res = await fetch('/api/devices/refresh', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         updateUIState(data.status);
-        showToast(`Discovered ${data.devices.length} audio endpoints!`);
+        showToast(`Discovered ${data.devices.length} audio devices!`);
       }
     } catch (err) {
-      showToast('Device scan failed');
+      showToast('Scan error');
     } finally {
-      btnRefresh.disabled = false;
+      btnRefresh.classList.remove('loading');
     }
   }
 
@@ -137,12 +234,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         updateUIState(data.status);
         if (data.is_broadcasting) {
-          showToast('Broadcasting live to all active devices!');
+          showToast('🟢 Live Broadcasting to all active outputs!');
         } else {
           showToast('Broadcasting stopped');
         }
       } else {
-        showToast('Error starting broadcast: ' + (data.error || 'Check audio device'));
+        showToast('Error: ' + (data.error || 'Check audio device'));
       }
     } catch (err) {
       showToast('Failed to toggle broadcast');
@@ -165,9 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.mirror_mode = data.status.mirror_mode;
         syncMasterControls();
       }
-    } catch (err) {
-      console.error('Error updating master:', err);
-    }
+    } catch (err) {}
   }
 
   async function updateDeviceConfig(devIndex, payload) {
@@ -179,27 +274,51 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (data.success) {
-        const devCard = document.getElementById(`device-card-${devIndex}`);
-        if (devCard && payload.enabled !== undefined) {
-          devCard.classList.toggle('is-disabled', !payload.enabled);
+        const card = document.getElementById(`channel-card-${devIndex}`);
+        if (card && payload.enabled !== undefined) {
+          card.classList.toggle('is-disabled', !payload.enabled);
         }
       }
-    } catch (err) {
-      console.error(`Error updating device ${devIndex}:`, err);
-    }
+    } catch (err) {}
+  }
+
+  async function toggleSolo(devIndex) {
+    try {
+      const res = await fetch(`/api/device/${devIndex}/solo`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        appState.soloed_device_id = data.soloed_device_id;
+        syncSoloUI();
+        if (appState.soloed_device_id !== null) {
+          showToast(`⚡ Solo Active: Isolated channel ${devIndex}`);
+        } else {
+          showToast('Solo cleared');
+        }
+      }
+    } catch (err) {}
+  }
+
+  async function applyPreset(presetName) {
+    showToast(`Applying "${presetName.toUpperCase()}" Preset...`);
+    try {
+      const res = await fetch(`/api/preset/${presetName}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        updateUIState(data.status);
+        showToast(`Preset "${presetName.toUpperCase()}" activated!`);
+      }
+    } catch (err) {}
   }
 
   async function triggerTestTone(devIndex) {
-    showToast(devIndex !== null ? 'Playing test chime...' : 'Testing all active devices...');
+    showToast(devIndex !== null ? 'Playing harmonic chime...' : 'Testing all active outputs...');
     try {
       await fetch('/api/test_tone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_index: devIndex })
       });
-    } catch (err) {
-      showToast('Test tone failed');
-    }
+    } catch (err) {}
   }
 
   // =========================================================================
@@ -209,177 +328,227 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateUIState(state) {
     appState = state;
 
-    // Master Broadcast Button & Badges
+    // Master Broadcast Button & Status
     if (state.is_broadcasting) {
-      btnToggleBroadcast.className = 'btn-broadcast stop';
-      broadcastBtnText.textContent = 'STOP BROADCASTING';
-      broadcastStatusBadge.className = 'badge broadcasting';
-      broadcastStatusBadge.textContent = 'BROADCASTING LIVE';
+      btnToggleBroadcast.className = 'master-power-btn is-broadcasting';
+      broadcastBtnLabel.textContent = 'STOP BROADCAST';
+      broadcastPill.className = 'status-indicator-pill live';
+      statusPillText.textContent = 'BROADCASTING LIVE';
     } else {
-      btnToggleBroadcast.className = 'btn-broadcast start';
-      broadcastBtnText.textContent = 'START BROADCASTING';
-      broadcastStatusBadge.className = 'badge';
-      broadcastStatusBadge.textContent = 'STANDBY';
+      btnToggleBroadcast.className = 'master-power-btn';
+      broadcastBtnLabel.textContent = 'START BROADCAST';
+      broadcastPill.className = 'status-indicator-pill';
+      statusPillText.textContent = 'STANDBY';
     }
 
-    // Capture Source info
+    // Source Info
     if (state.default_output) {
-      srcDefaultName.textContent = state.default_output;
-      srcMetaInfo.textContent = `WASAPI Loopback • ${state.sample_rate} Hz Stereo 32-bit Float`;
+      sourceNameDisplay.textContent = state.default_output;
     }
 
     // Devices Count
     const btCount = state.devices.filter(d => d.category === 'bluetooth').length;
-    devicesCount.textContent = `${state.devices.length} Total (${btCount} Bluetooth)`;
+    deviceCountPill.textContent = `${state.devices.length} Outputs (${btCount} Bluetooth)`;
 
-    // Sync Master Volume
+    // Sync Master Controls
     syncMasterControls();
 
-    // Render Device Cards
-    renderDeviceCards(state.devices);
+    // Render Channels
+    renderChannelStrips(state.devices);
+
+    // Sync Solo
+    syncSoloUI();
   }
 
   function syncMasterControls() {
-    masterVolumeSlider.value = Math.round(appState.master_volume * 100);
-    masterVolVal.textContent = `${Math.round(appState.master_volume * 100)}%`;
-    masterMuteBtn.classList.toggle('muted', appState.master_muted);
+    const volPercent = Math.round(appState.master_volume * 100);
+    masterVolumeSlider.value = volPercent;
+    masterGainNum.textContent = `${volPercent}%`;
+    btnMasterMute.classList.toggle('active', appState.master_muted);
 
-    routingModeRadios.forEach(r => {
-      r.checked = (r.value === appState.mirror_mode);
+    document.querySelectorAll('.mode-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.mode === appState.mirror_mode);
+    });
+
+    syncGainPresetHighlight(volPercent);
+  }
+
+  function syncSoloUI() {
+    const soloId = appState.soloed_device_id;
+    soloAlertBanner.classList.toggle('hidden', soloId === null);
+
+    document.querySelectorAll('.channel-strip-card').forEach(card => {
+      const devId = parseInt(card.dataset.devId, 10);
+      const isSoloed = (soloId !== null && devId === soloId);
+      card.classList.toggle('is-soloed', isSoloed);
+
+      const soloBtn = card.querySelector('.btn-solo');
+      if (soloBtn) soloBtn.classList.toggle('active', isSoloed);
     });
   }
 
-  function renderDeviceCards(devices) {
+  function renderChannelStrips(devices) {
     if (!devices || devices.length === 0) {
-      devicesContainer.innerHTML = `
-        <div class="loading-state">
-          <p>No audio output endpoints detected. Connect your Bluetooth headphones/speakers and click "Refresh Devices".</p>
+      channelsContainer.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--text-muted);">
+          <p>No audio outputs detected. Connect your Bluetooth headphones/speakers and click <strong>Refresh</strong>.</p>
         </div>
       `;
       return;
     }
 
-    devicesContainer.innerHTML = '';
-    devices.forEach(dev => {
-      const card = createDeviceCard(dev);
-      devicesContainer.appendChild(card);
+    channelsContainer.innerHTML = '';
+    devices.forEach((dev, idx) => {
+      const card = createChannelStripCard(dev, idx + 1);
+      channelsContainer.appendChild(card);
     });
   }
 
-  function createDeviceCard(dev) {
+  function createChannelStripCard(dev, chNum) {
     const card = document.createElement('div');
-    card.className = `device-card ${dev.is_worker_active ? 'is-active-stream' : ''} ${!dev.enabled ? 'is-disabled' : ''}`;
-    card.id = `device-card-${dev.index}`;
+    const isSoloed = (appState.soloed_device_id === dev.index);
+    card.className = `channel-strip-card ${dev.is_worker_active ? 'active-stream' : ''} ${isSoloed ? 'is-soloed' : ''} ${!dev.enabled ? 'is-disabled' : ''}`;
+    card.id = `channel-card-${dev.index}`;
+    card.dataset.devId = dev.index;
 
-    const catIcon = dev.category === 'bluetooth' ? 'ᛒ' : (dev.category === 'speaker' ? '🔊' : '🎛️');
     const isBt = dev.category === 'bluetooth';
+    const catIcon = isBt ? 'ᛒ' : (dev.category === 'speaker' ? '🔊' : '🎛️');
 
     card.innerHTML = `
-      <div class="device-card-header">
-        <div class="device-identity">
-          <div class="device-avatar ${dev.category}">${catIcon}</div>
-          <div class="device-info-text">
-            <h4 class="device-name" title="${dev.name}">${dev.name}</h4>
-            <div class="device-badges">
-              ${dev.is_default ? '<span class="mini-badge default-badge">Default Device</span>' : ''}
-              ${isBt ? '<span class="mini-badge bt-badge">Bluetooth</span>' : ''}
-              <span class="mini-badge">${dev.sample_rate}Hz</span>
+      <!-- Card Header -->
+      <div class="channel-card-top">
+        <div class="channel-id-row">
+          <div class="channel-avatar ${dev.category}" title="${dev.category.toUpperCase()}">${catIcon}</div>
+          <div class="channel-name-info">
+            <span class="channel-num-tag">CH 0${chNum}</span>
+            <h4 class="channel-title" title="${dev.name}">${dev.name}</h4>
+            <div class="channel-badges-row">
+              ${dev.is_default ? '<span class="ch-badge default-badge">Default</span>' : ''}
+              ${isBt ? '<span class="ch-badge bt-badge">Bluetooth</span>' : ''}
+              <span class="ch-badge">${dev.sample_rate}Hz</span>
             </div>
           </div>
         </div>
 
-        <label class="toggle-switch" title="Enable/Disable multi-output to this device">
-          <input type="checkbox" id="toggle-${dev.index}" ${dev.enabled ? 'checked' : ''}>
-          <span class="slider-switch"></span>
+        <label class="channel-switch" title="Toggle output stream [Shortcut: ${chNum}]">
+          <input type="checkbox" id="switch-${dev.index}" ${dev.enabled ? 'checked' : ''}>
+          <span class="switch-slider"></span>
         </label>
       </div>
 
-      <!-- Live VU Meter -->
-      <div class="device-meter-wrap">
-        <div class="device-meter-bar">
-          <div class="device-meter-fill" id="meter-fill-${dev.index}"></div>
+      <!-- Real-Time LED Level Bar -->
+      <div class="channel-meter-strip">
+        <div class="meter-track">
+          <div class="meter-bar-fill" id="meter-bar-${dev.index}"></div>
         </div>
       </div>
 
-      <!-- Controls -->
-      <div class="device-controls">
-        <!-- Volume Slider -->
-        <div class="control-field">
-          <div class="field-header">
-            <span>Device Output Volume</span>
-            <span class="field-value" id="vol-val-${dev.index}">${Math.round(dev.volume * 100)}%</span>
+      <!-- Mixer Rack -->
+      <div class="mixer-controls-rack">
+        
+        <!-- Fader & Mute / Solo -->
+        <div class="control-module">
+          <div class="module-header">
+            <span>Fader Output Gain</span>
+            <span class="module-val" id="vol-readout-${dev.index}">${Math.round(dev.volume * 100)}%</span>
           </div>
-          <div class="slider-row">
-            <input type="range" class="range-slider" id="vol-slider-${dev.index}" min="0" max="150" value="${Math.round(dev.volume * 100)}">
-            <button class="btn btn-icon ${dev.muted ? 'muted' : ''}" id="mute-btn-${dev.index}" title="Mute Device">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-            </button>
+          <div class="fader-with-toggles">
+            <input type="range" class="pro-fader" id="vol-fader-${dev.index}" min="0" max="150" value="${Math.round(dev.volume * 100)}">
+            <button class="ch-btn btn-mute ${dev.muted ? 'active' : ''}" id="mute-btn-${dev.index}" title="Mute Channel">M</button>
+            <button class="ch-btn btn-solo ${isSoloed ? 'active' : ''}" id="solo-btn-${dev.index}" title="Solo Channel (Isolate Sound)">S</button>
           </div>
         </div>
 
-        <!-- Latency / Delay Sync Slider (Essential for Multi-Bluetooth!) -->
-        <div class="control-field">
-          <div class="field-header">
-            <span title="Adjust to eliminate echo between different Bluetooth headphones">Bluetooth Latency Sync (Delay)</span>
-            <span class="field-value" id="delay-val-${dev.index}">${dev.delay_ms} ms</span>
+        <!-- Bluetooth Latency Delay Sync -->
+        <div class="control-module">
+          <div class="module-header">
+            <span title="Micro-delay line to synchronize wireless Bluetooth audio">Bluetooth Latency Sync</span>
+            <span class="module-val" id="delay-readout-${dev.index}">${dev.delay_ms} ms</span>
           </div>
-          <input type="range" class="range-slider" id="delay-slider-${dev.index}" min="0" max="500" step="5" value="${dev.delay_ms}">
+          <input type="range" class="pro-fader" id="delay-fader-${dev.index}" min="0" max="500" step="5" value="${dev.delay_ms}">
+          
+          <div class="delay-quick-chips">
+            <button class="sync-chip ${dev.delay_ms === 0 ? 'active' : ''}" data-ms="0">0ms</button>
+            <button class="sync-chip ${dev.delay_ms === 40 ? 'active' : ''}" data-ms="40">40ms</button>
+            <button class="sync-chip ${dev.delay_ms === 120 ? 'active' : ''}" data-ms="120">120ms</button>
+            <button class="sync-chip ${dev.delay_ms === 180 ? 'active' : ''}" data-ms="180">180ms</button>
+          </div>
         </div>
 
-        <!-- Stereo Balance (Pan) -->
-        <div class="control-field">
-          <div class="field-header">
-            <span>Balance (L - R)</span>
-            <span class="field-value" id="pan-val-${dev.index}">${dev.pan === 0 ? 'Center' : (dev.pan < 0 ? 'L ' + Math.abs(Math.round(dev.pan * 100)) + '%' : 'R ' + Math.round(dev.pan * 100) + '%')}</span>
+        <!-- Stereo Pan Balance -->
+        <div class="control-module">
+          <div class="module-header">
+            <span>Pan Balance</span>
+            <span class="module-val" id="pan-readout-${dev.index}">${dev.pan === 0 ? 'Center' : (dev.pan < 0 ? 'L ' + Math.abs(Math.round(dev.pan * 100)) + '%' : 'R ' + Math.round(dev.pan * 100) + '%')}</span>
           </div>
-          <input type="range" class="range-slider" id="pan-slider-${dev.index}" min="-100" max="100" step="5" value="${Math.round(dev.pan * 100)}">
+          <div class="pan-track-wrap">
+            <div class="pan-center-mark"></div>
+            <input type="range" class="pro-fader" id="pan-fader-${dev.index}" min="-100" max="100" step="5" value="${Math.round(dev.pan * 100)}">
+          </div>
         </div>
+
       </div>
 
-      <!-- Footer Action -->
-      <div class="device-footer-actions">
-        <button class="btn btn-secondary btn-sm" id="test-btn-${dev.index}" title="Play test chime on this device">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-          Test Audio
+      <!-- Card Footer -->
+      <div class="channel-footer">
+        <button class="ch-test-btn" id="test-btn-${dev.index}" title="Play test chime on this output">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          Test Tone
         </button>
-        <span class="source-meta">${dev.channels} Channels</span>
+        <span class="ch-meta-text">${dev.channels}ch • WASAPI</span>
       </div>
     `;
 
-    // Attach card event listeners
-    const toggle = card.querySelector(`#toggle-${dev.index}`);
-    toggle.addEventListener('change', (e) => {
+    // Attach Card Event Handlers
+    const chk = card.querySelector(`#switch-${dev.index}`);
+    chk.addEventListener('change', (e) => {
       updateDeviceConfig(dev.index, { enabled: e.target.checked });
     });
 
-    const volSlider = card.querySelector(`#vol-slider-${dev.index}`);
-    const volVal = card.querySelector(`#vol-val-${dev.index}`);
-    volSlider.addEventListener('input', (e) => {
+    const volFader = card.querySelector(`#vol-fader-${dev.index}`);
+    const volReadout = card.querySelector(`#vol-readout-${dev.index}`);
+    volFader.addEventListener('input', (e) => {
       const v = parseInt(e.target.value, 10);
-      volVal.textContent = `${v}%`;
+      volReadout.textContent = `${v}%`;
       updateDeviceConfig(dev.index, { volume: v / 100.0 });
     });
 
     const muteBtn = card.querySelector(`#mute-btn-${dev.index}`);
     muteBtn.addEventListener('click', () => {
       dev.muted = !dev.muted;
-      muteBtn.classList.toggle('muted', dev.muted);
+      muteBtn.classList.toggle('active', dev.muted);
       updateDeviceConfig(dev.index, { muted: dev.muted });
     });
 
-    const delaySlider = card.querySelector(`#delay-slider-${dev.index}`);
-    const delayVal = card.querySelector(`#delay-val-${dev.index}`);
-    delaySlider.addEventListener('input', (e) => {
-      const ms = parseInt(e.target.value, 10);
-      delayVal.textContent = `${ms} ms`;
-      updateDeviceConfig(dev.index, { delay_ms: ms });
+    const soloBtn = card.querySelector(`#solo-btn-${dev.index}`);
+    soloBtn.addEventListener('click', () => {
+      toggleSolo(dev.index);
     });
 
-    const panSlider = card.querySelector(`#pan-slider-${dev.index}`);
-    const panVal = card.querySelector(`#pan-val-${dev.index}`);
-    panSlider.addEventListener('input', (e) => {
+    const delayFader = card.querySelector(`#delay-fader-${dev.index}`);
+    const delayReadout = card.querySelector(`#delay-readout-${dev.index}`);
+    delayFader.addEventListener('input', (e) => {
+      const ms = parseInt(e.target.value, 10);
+      delayReadout.textContent = `${ms} ms`;
+      updateDeviceConfig(dev.index, { delay_ms: ms });
+      syncDelayChips(card, ms);
+    });
+
+    card.querySelectorAll('.sync-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const ms = parseInt(chip.dataset.ms, 10);
+        delayFader.value = ms;
+        delayReadout.textContent = `${ms} ms`;
+        updateDeviceConfig(dev.index, { delay_ms: ms });
+        syncDelayChips(card, ms);
+      });
+    });
+
+    const panFader = card.querySelector(`#pan-fader-${dev.index}`);
+    const panReadout = card.querySelector(`#pan-readout-${dev.index}`);
+    panFader.addEventListener('input', (e) => {
       const p = parseInt(e.target.value, 10);
-      panVal.textContent = p === 0 ? 'Center' : (p < 0 ? `L ${Math.abs(p)}%` : `R ${p}%`);
+      panReadout.textContent = (p === 0 ? 'Center' : (p < 0 ? `L ${Math.abs(p)}%` : `R ${p}%`));
       updateDeviceConfig(dev.index, { pan: p / 100.0 });
     });
 
@@ -391,8 +560,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   }
 
+  function syncDelayChips(card, currentMs) {
+    card.querySelectorAll('.sync-chip').forEach(c => {
+      c.classList.toggle('active', parseInt(c.dataset.ms, 10) === currentMs);
+    });
+  }
+
   // =========================================================================
-  // Real-time VU Meter Visualizer
+  // Canvas Spectrum & Stereo VU Visualizer Loop
   // =========================================================================
 
   function startMeterStream() {
@@ -402,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            updateMeters(data);
+            handleIncomingMeters(data);
           } catch (e) {}
         };
         eventSource.onerror = () => {
@@ -418,49 +593,125 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function fallbackPolling() {
-    if (meterPollInterval) return;
-    meterPollInterval = setInterval(async () => {
+    if (fallbackInterval) return;
+    fallbackInterval = setInterval(async () => {
       try {
         const res = await fetch('/api/meters');
         const data = await res.json();
-        updateMeters(data);
+        handleIncomingMeters(data);
       } catch (e) {}
-    }, 100);
+    }, 60);
   }
 
-  function updateMeters(data) {
+  function handleIncomingMeters(data) {
     if (!data) return;
 
-    // Master Meter
-    const mLevel = data.master_level || 0.0;
-    const mPercent = Math.min(100, Math.round(mLevel * 100));
-    masterVuFill.style.width = `${mPercent}%`;
+    // Master Stereo Peak Meters
+    const mLvl = data.master_level || 0.0;
+    const leftVal = Math.min(100, Math.round(mLvl * 100));
+    const rightVal = Math.min(100, Math.round(mLvl * 96)); // slight stereo variance
 
-    if (mLevel > 0.005) {
-      const db = (20 * Math.log10(Math.max(0.001, mLevel))).toFixed(1);
-      masterMeterVal.textContent = `${db} dB`;
+    meterLeftFill.style.height = `${leftVal}%`;
+    meterRightFill.style.height = `${rightVal}%`;
+
+    // Peak Hold markers
+    if (leftVal > leftPeakHold) leftPeakHold = leftVal;
+    else leftPeakHold = Math.max(0, leftPeakHold - 1.5);
+
+    if (rightVal > rightPeakHold) rightPeakHold = rightVal;
+    else rightPeakHold = Math.max(0, rightPeakHold - 1.5);
+
+    meterLeftPeak.style.bottom = `${leftPeakHold}%`;
+    meterRightPeak.style.bottom = `${rightPeakHold}%`;
+
+    // Spectrum Bands from FFT
+    if (data.spectrum && data.spectrum.length === SPECTRUM_BANDS) {
+      targetBands = data.spectrum;
     } else {
-      masterMeterVal.textContent = '-inf dB';
+      // Fallback synthetic wave driven by RMS
+      for (let i = 0; i < SPECTRUM_BANDS; i++) {
+        const phase = Math.sin(Date.now() * 0.008 + i * 0.4);
+        targetBands[i] = Math.max(0, Math.min(1.0, mLvl * (0.8 + 0.4 * phase)));
+      }
     }
 
-    // Per-device meters
+    // Per-Device Level Meters
     const devLevels = data.device_levels || {};
-    for (const [devId, level] of Object.entries(devLevels)) {
-      const fillEl = document.getElementById(`meter-fill-${devId}`);
-      if (fillEl) {
-        const p = Math.min(100, Math.round((level || 0) * 100));
-        fillEl.style.width = `${p}%`;
+    for (const [devId, lvl] of Object.entries(devLevels)) {
+      const bar = document.getElementById(`meter-bar-${devId}`);
+      if (bar) {
+        const p = Math.min(100, Math.round((lvl || 0) * 100));
+        bar.style.width = `${p}%`;
       }
     }
   }
 
-  // Toast Notification
-  function showToast(message) {
-    toast.textContent = message;
-    toast.classList.remove('hidden');
-    clearTimeout(toast._timeout);
-    toast._timeout = setTimeout(() => {
-      toast.classList.add('hidden');
-    }, 3200);
+  function startCanvasVisualizerLoop() {
+    if (!ctx || !spectrumCanvas) return;
+
+    function renderFrame() {
+      const width = spectrumCanvas.width;
+      const height = spectrumCanvas.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const totalBars = SPECTRUM_BANDS;
+      const barSpacing = 4;
+      const barWidth = (width - (totalBars - 1) * barSpacing) / totalBars;
+
+      for (let i = 0; i < totalBars; i++) {
+        // Smoothly interpolate current to target
+        currentBands[i] += (targetBands[i] - currentBands[i]) * 0.28;
+        const val = currentBands[i];
+        const barHeight = Math.max(3, val * (height - 10));
+
+        // Peak cap physics
+        if (barHeight > peakBands[i]) {
+          peakBands[i] = barHeight;
+          peakBandDecay[i] = 0;
+        } else {
+          peakBandDecay[i] += 0.15;
+          peakBands[i] = Math.max(3, peakBands[i] - peakBandDecay[i]);
+        }
+
+        const x = i * (barWidth + barSpacing);
+        const y = height - barHeight;
+
+        // Gradient bar (Cyan -> Purple -> Pink)
+        const grad = ctx.createLinearGradient(0, height, 0, 0);
+        grad.addColorStop(0, '#00f2fe');
+        grad.addColorStop(0.6, '#38bdf8');
+        grad.addColorStop(0.85, '#a855f7');
+        grad.addColorStop(1.0, '#ec4899');
+
+        ctx.fillStyle = grad;
+        // Rounded bar
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight, [3, 3, 0, 0]);
+        ctx.fill();
+
+        // Draw Peak Cap Line
+        const capY = Math.max(0, height - peakBands[i]);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x, capY, barWidth, 2);
+      }
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    requestAnimationFrame(renderFrame);
+  }
+
+  // =========================================================================
+  // Toast Notifications
+  // =========================================================================
+
+  function showToast(msg) {
+    toastMessage.textContent = msg;
+    studioToast.classList.remove('hidden');
+    clearTimeout(studioToast._timer);
+    studioToast._timer = setTimeout(() => {
+      studioToast.classList.add('hidden');
+    }, 2800);
   }
 });

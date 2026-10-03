@@ -107,6 +107,28 @@ def update_device(dev_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/device/<int:dev_id>/solo', methods=['POST'])
+def solo_device(dev_id):
+    try:
+        solo_id = audio_engine.toggle_solo(dev_id)
+        return jsonify({
+            'success': True,
+            'soloed_device_id': solo_id,
+            'status': audio_engine.get_status()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/preset/<preset_name>', methods=['POST'])
+def apply_preset(preset_name):
+    try:
+        status = audio_engine.apply_preset(preset_name)
+        return jsonify({'success': True, 'status': status})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/test_tone', methods=['POST'])
 def test_tone():
     try:

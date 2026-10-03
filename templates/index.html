@@ -3,222 +3,320 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SoundSync Multi-Out | Multi-Device Audio Hub</title>
+  <title>SoundSync Multi-Out | Pro Audio Hub</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body class="dark-theme">
-  <div class="app-container">
-    <!-- Top Navigation Header -->
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-icon">
-          <span class="wave bar1"></span>
-          <span class="wave bar2"></span>
-          <span class="wave bar3"></span>
-          <span class="wave bar4"></span>
-        </div>
-        <div class="brand-text">
-          <h1>SoundSync <span class="accent-text">Multi-Out</span></h1>
-          <p class="subtitle">Simultaneous Multi-Bluetooth & Sound Device Router</p>
+<body class="studio-dark">
+  <div class="app-shell">
+    
+    <!-- Top Studio Navbar -->
+    <header class="studio-nav">
+      <div class="nav-left">
+        <div class="logo-box">
+          <div class="logo-icon-pulse">
+            <span class="pulse-ring"></span>
+            <span class="bar b1"></span>
+            <span class="bar b2"></span>
+            <span class="bar b3"></span>
+            <span class="bar b4"></span>
+          </div>
+          <div class="logo-text">
+            <div class="brand-title">SOUND<span class="highlight">SYNC</span> <span class="tag-pro">MULTI-OUT</span></div>
+            <div class="brand-sub">Multi-Bluetooth &amp; Sound Endpoint Matrix</div>
+          </div>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button id="btn-refresh" class="btn btn-secondary" title="Scan for newly connected Bluetooth or audio devices">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          Refresh Devices
-        </button>
-        <button id="btn-test-all" class="btn btn-secondary" title="Play test harmonic chord on all active devices">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-          Test All Devices
-        </button>
-        <button id="btn-help" class="btn btn-outline" title="How to connect 3 Bluetooth devices to Windows">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.65z"/></svg>
-          Bluetooth Setup Guide
-        </button>
-      </div>
-    </header>
-
-    <!-- Master Control Deck -->
-    <section class="master-deck card">
-      <div class="master-header">
-        <div class="deck-title-area">
-          <span class="badge" id="broadcast-status-badge">Standby</span>
-          <h2>Master Broadcast Deck</h2>
-          <p class="text-muted">Captures all laptop audio (YouTube, Spotify, Movies, Games) and routes to multiple outputs</p>
-        </div>
-
-        <div class="broadcast-action">
-          <button id="btn-toggle-broadcast" class="btn-broadcast start">
-            <span class="btn-glow"></span>
-            <span class="broadcast-icon"></span>
-            <span id="broadcast-btn-text">START BROADCASTING</span>
+      <!-- Quick Sound Presets -->
+      <div class="nav-center">
+        <div class="presets-bar" title="Quick Audio Routing Presets">
+          <span class="presets-label">PRESETS:</span>
+          <button class="preset-chip active" data-preset="party" title="Broadcast to all 3 devices at 100% volume">
+            <span class="chip-icon">🎧</span> Tri-Party
+          </button>
+          <button class="preset-chip" data-preset="cinema" title="Optimized latency sync for movie watching">
+            <span class="chip-icon">🎬</span> Cinema Sync
+          </button>
+          <button class="preset-chip" data-preset="balanced" title="Balanced 85% volume across all devices">
+            <span class="chip-icon">⚖️</span> Balanced
           </button>
         </div>
       </div>
 
-      <div class="master-controls-grid">
-        <!-- Capture Source Info -->
-        <div class="control-box">
-          <label class="control-label">Audio Capture Source</label>
-          <div class="source-info-box">
-            <div class="source-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-            </div>
-            <div class="source-details">
-              <span class="source-title" id="src-default-name">Detecting default output...</span>
-              <span class="source-meta" id="src-meta-info">WASAPI Loopback • 48.0 kHz 32-bit Float</span>
-            </div>
-          </div>
-          
-          <div class="mode-selector">
-            <label class="radio-label" title="Default device plays natively; app duplicates to all other connected Bluetooth devices">
-              <input type="radio" name="routing_mode" value="mirror" checked>
-              <span>Smart Mirror (Recommended)</span>
-            </label>
-            <label class="radio-label" title="Routes through app stream to all selected devices">
-              <input type="radio" name="routing_mode" value="all">
-              <span>Full Multi-Stream</span>
-            </label>
-          </div>
-        </div>
+      <div class="nav-right">
+        <button id="btn-refresh" class="nav-btn" title="Rescan Windows audio & Bluetooth devices [Shortcut: R]">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          <span>Refresh</span>
+          <kbd class="kbd-hint">R</kbd>
+        </button>
 
-        <!-- Master Volume & Mute -->
-        <div class="control-box">
-          <div class="control-box-header">
-            <label class="control-label">Master Multi-Out Volume</label>
-            <span class="value-badge" id="master-vol-val">100%</span>
-          </div>
-          <div class="slider-row">
-            <input type="range" id="master-volume-slider" min="0" max="150" value="100" class="range-slider">
-            <button id="master-mute-btn" class="btn btn-icon" title="Master Mute">
-              <svg id="master-mute-icon" class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        <button id="btn-test-all" class="nav-btn" title="Play test harmonic chime across all active devices [Shortcut: T]">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <span>Test All</span>
+          <kbd class="kbd-hint">T</kbd>
+        </button>
+
+        <button id="btn-shortcuts" class="nav-btn icon-only" title="Keyboard Shortcuts">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+        </button>
+
+        <button id="btn-help" class="nav-btn primary-tint" title="How to pair 3 Bluetooth devices to Windows">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.65z"/></svg>
+          <span>Bluetooth Guide</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <main class="studio-main">
+      
+      <!-- HERO MASTER CONSOLE -->
+      <section class="master-console-panel glass-panel">
+        <div class="console-glow-line"></div>
+        
+        <div class="console-layout">
+          <!-- Left: Big Broadcast Controller & Status -->
+          <div class="broadcast-trigger-col">
+            <div class="status-indicator-pill" id="broadcast-pill">
+              <span class="status-dot"></span>
+              <span class="status-text" id="status-pill-text">READY TO BROADCAST</span>
+            </div>
+
+            <button id="btn-toggle-broadcast" class="master-power-btn" title="Toggle audio broadcast to all devices [Shortcut: Space]">
+              <div class="power-ring-outer"></div>
+              <div class="power-ring-inner"></div>
+              <div class="power-btn-content">
+                <svg class="power-svg" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
+                <span id="broadcast-btn-label">START BROADCAST</span>
+                <span class="power-shortcut-hint">SPACEBAR</span>
+              </div>
             </button>
-          </div>
-          <div class="volume-presets">
-            <button class="preset-btn" data-vol="0">Mute</button>
-            <button class="preset-btn" data-vol="50">50%</button>
-            <button class="preset-btn" data-vol="100">100%</button>
-            <button class="preset-btn" data-vol="125">125%</button>
-          </div>
-        </div>
 
-        <!-- Master VU Meter -->
-        <div class="control-box vu-box">
-          <div class="control-box-header">
-            <label class="control-label">Live Loopback Audio Energy</label>
-            <span class="meter-db" id="master-meter-val">-inf dB</span>
-          </div>
-          <div class="vu-meter-container">
-            <div class="vu-meter-bar">
-              <div class="vu-meter-fill" id="master-vu-fill"></div>
-              <div class="vu-peak-dot" id="master-vu-peak"></div>
+            <!-- Mode Selector -->
+            <div class="routing-mode-switch">
+              <button class="mode-tab active" data-mode="mirror" title="Default device plays natively with zero latency; duplicates to Bluetooth 2, 3...">
+                Smart Mirror
+              </button>
+              <button class="mode-tab" data-mode="all" title="Streams software audio to all devices simultaneously">
+                Multi-Direct
+              </button>
             </div>
           </div>
-          <div class="meter-scale">
-            <span>-40dB</span>
-            <span>-24dB</span>
-            <span>-12dB</span>
-            <span>-6dB</span>
-            <span>0dB</span>
-            <span class="clip-text">+3dB</span>
+
+          <!-- Center: 20-Band Dynamic Audio Spectrum Visualizer -->
+          <div class="spectrum-visualizer-col">
+            <div class="col-header">
+              <div class="col-title-group">
+                <span class="section-tag">SPECTRUM RACK</span>
+                <h4>Real-Time Audio Spectrum (WASAPI Digital Capture)</h4>
+              </div>
+              <div class="source-badge" id="source-badge">
+                <span class="source-indicator">●</span>
+                <span id="source-name-display">OnePlus Nord Buds 3</span>
+                <span class="source-format">48kHz / 32-bit Float</span>
+              </div>
+            </div>
+
+            <!-- Canvas Spectrum Bars -->
+            <div class="spectrum-canvas-wrap">
+              <canvas id="spectrum-canvas" width="600" height="110"></canvas>
+              <div class="spectrum-freq-axis">
+                <span>40Hz</span>
+                <span>120Hz</span>
+                <span>250Hz</span>
+                <span>500Hz</span>
+                <span>1kHz</span>
+                <span>2kHz</span>
+                <span>4kHz</span>
+                <span>8kHz</span>
+                <span>16kHz</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Master Gain & Stereo Peak Meters -->
+          <div class="master-gain-col">
+            <div class="col-header">
+              <span class="section-tag">MASTER GAIN</span>
+              <span class="gain-numeric" id="master-gain-num">100%</span>
+            </div>
+
+            <div class="gain-meters-row">
+              <!-- Dual Peak Stereo Meter -->
+              <div class="stereo-peak-meter" title="Master Left & Right Peak Audio Meter">
+                <div class="peak-channel">
+                  <div class="channel-label">L</div>
+                  <div class="channel-track">
+                    <div class="channel-fill" id="meter-left-fill"></div>
+                    <div class="peak-marker" id="meter-left-peak"></div>
+                  </div>
+                </div>
+                <div class="peak-channel">
+                  <div class="channel-label">R</div>
+                  <div class="channel-track">
+                    <div class="channel-fill" id="meter-right-fill"></div>
+                    <div class="peak-marker" id="meter-right-peak"></div>
+                  </div>
+                </div>
+                <div class="db-labels">
+                  <span>+3</span>
+                  <span>0</span>
+                  <span>-6</span>
+                  <span>-18</span>
+                  <span>-36</span>
+                  <span>-inf</span>
+                </div>
+              </div>
+
+              <!-- Master Fader Slider -->
+              <div class="master-slider-wrap">
+                <div class="fader-track-glow">
+                  <input type="range" id="master-volume-slider" min="0" max="150" value="100" class="pro-fader" orient="vertical">
+                </div>
+                <div class="master-action-btns">
+                  <button id="btn-master-mute" class="tool-btn mute-btn" title="Master Mute [M]">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                    MUTE
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gain Preset Taps -->
+            <div class="quick-gain-row">
+              <button class="gain-tap" data-vol="0">0%</button>
+              <button class="gain-tap" data-vol="50">50%</button>
+              <button class="gain-tap active" data-vol="100">100%</button>
+              <button class="gain-tap" data-vol="125">125%</button>
+              <button class="gain-tap boost" data-vol="150">+3dB</button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Connected Devices Rack -->
-    <section class="devices-section">
-      <div class="section-header">
-        <div class="title-with-counter">
-          <h3>Connected Audio & Bluetooth Devices</h3>
-          <span class="counter-badge" id="devices-count">0 Detected</span>
-        </div>
-        <div class="section-legend">
-          <span class="legend-item"><span class="legend-dot bluetooth"></span> Bluetooth Device</span>
-          <span class="legend-item"><span class="legend-dot speaker"></span> Built-in / Speakers</span>
-          <span class="legend-item"><span class="legend-dot virtual"></span> Virtual Cable</span>
-        </div>
-      </div>
+      <!-- DEVICES MATRIX SECTION -->
+      <section class="devices-matrix-section">
+        <div class="matrix-header">
+          <div class="matrix-title-wrap">
+            <div class="title-row">
+              <h3>Output Channel Strips</h3>
+              <span class="device-count-pill" id="device-count-pill">3 Outputs Active</span>
+            </div>
+            <p class="matrix-subtitle">Control independent volume, micro-delay wireless sync, and stereo pan for each connected device</p>
+          </div>
 
-      <!-- Device Cards Container -->
-      <div class="devices-grid" id="devices-container">
-        <!-- Rendered dynamically via JavaScript -->
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Scanning Windows Audio Endpoints...</p>
+          <div class="solo-active-alert hidden" id="solo-alert-banner">
+            <span class="solo-alert-icon">⚡</span>
+            <span>SOLO MODE ACTIVE: Audio routed exclusively to isolated channel</span>
+            <button id="btn-clear-solo" class="btn-clear-solo">CLEAR SOLO</button>
+          </div>
         </div>
-      </div>
-    </section>
+
+        <!-- Dynamic Mixer Channel Strips -->
+        <div class="channel-strips-grid" id="channels-container">
+          <!-- Dynamically populated via app.js -->
+        </div>
+      </section>
+
+    </main>
 
     <!-- Bluetooth Setup Guide Modal -->
-    <div id="guide-modal" class="modal-overlay hidden">
-      <div class="modal-content card">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-icon bluetooth-glow">ᛒ</div>
-            <h3>How to Connect 3 Bluetooth Devices on Windows</h3>
-          </div>
-          <button id="btn-close-modal" class="btn-close">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p class="modal-intro">
-            Windows 10 and 11 hardware supports pairing and maintaining simultaneous active connections to multiple Bluetooth audio devices. SoundSync Multi-Out bridges the Windows audio engine to stream sound to all of them together!
-          </p>
-
-          <div class="setup-steps">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <div class="step-info">
-                <h4>Pair 1st Bluetooth Device</h4>
-                <p>Open Windows <strong>Settings (Win + I) &gt; Bluetooth & devices</strong>. Put your first headphones/speaker into pairing mode and click <strong>Add device</strong>.</p>
-              </div>
-            </div>
-
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <div class="step-info">
-                <h4>Pair 2nd Bluetooth Device</h4>
-                <p>Put your second Bluetooth headphone or speaker into pairing mode. Click <strong>Add device</strong> again and connect. Both devices will show as <em>Connected audio</em>.</p>
-              </div>
-            </div>
-
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <div class="step-info">
-                <h4>Pair 3rd Bluetooth Device</h4>
-                <p>Put your third Bluetooth headset/speaker into pairing mode and connect. Windows keeps all 3 connected simultaneously!</p>
-              </div>
-            </div>
-
-            <div class="step-card">
-              <div class="step-number">4</div>
-              <div class="step-info">
-                <h4>Click "Refresh Devices" &amp; "Start Broadcasting"</h4>
-                <p>In SoundSync Multi-Out, click <strong>Refresh Devices</strong>. Enable the toggles for all 3 devices and press <strong>START BROADCASTING</strong>. Audio from any app (YouTube, Spotify, etc.) will play across all devices in real-time!</p>
-              </div>
-            </div>
-
-            <div class="step-card">
-              <div class="step-number">5</div>
-              <div class="step-info">
-                <h4>Sync Latency &amp; Control Individual Volumes</h4>
-                <p>Different Bluetooth brands have slight wireless delays. Use the <strong>Latency Sync</strong> slider on each card to dial out any echo, and adjust independent volume sliders to each listener's preference.</p>
-              </div>
+    <div id="guide-modal" class="studio-modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog glass-panel">
+        <div class="modal-dialog-header">
+          <div class="modal-headline">
+            <div class="bt-glyph-box">ᛒ</div>
+            <div>
+              <h3>How to Connect 3 Bluetooth Devices on Windows</h3>
+              <p class="modal-sub">Step-by-step wireless audio routing guide</p>
             </div>
           </div>
+          <button class="modal-close-btn" id="btn-close-guide">&times;</button>
         </div>
-        <div class="modal-footer">
-          <button id="btn-modal-gotit" class="btn btn-primary">Got it, let's sync sound!</button>
+
+        <div class="modal-dialog-body">
+          <div class="guide-steps-list">
+            <div class="guide-step-card">
+              <div class="step-badge">1</div>
+              <div class="step-content">
+                <h5>Pair 1st Bluetooth Headphones</h5>
+                <p>Press <kbd>Win</kbd> + <kbd>I</kbd> to open Windows Settings ➔ <strong>Bluetooth &amp; devices</strong>. Put your first earbuds/headphones into pairing mode, click <strong>Add device</strong>, and connect.</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card">
+              <div class="step-badge">2</div>
+              <div class="step-content">
+                <h5>Pair 2nd Bluetooth Headphones / Speaker</h5>
+                <p>Put your second Bluetooth device into pairing mode. Click <strong>Add device</strong> again and connect. Windows keeps both active!</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card">
+              <div class="step-badge">3</div>
+              <div class="step-content">
+                <h5>Pair 3rd Bluetooth Device</h5>
+                <p>Put your third Bluetooth headphones into pairing mode and connect. Windows will show all 3 devices connected simultaneously.</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card highlight-step">
+              <div class="step-badge">4</div>
+              <div class="step-content">
+                <h5>Click "Refresh" &amp; "Start Broadcast" in SoundSync</h5>
+                <p>Click <strong>Refresh</strong> in SoundSync Multi-Out. All 3 devices will show up with Bluetooth badges. Enable them and press <strong>START BROADCAST</strong>!</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card">
+              <div class="step-badge">5</div>
+              <div class="step-content">
+                <h5>Calibrate Wireless Latency Sync</h5>
+                <p>Different Bluetooth brands (AirPods, boAt, OnePlus, Sony) have different wireless latencies. Use the <strong>Sync Delay slider</strong> on each channel to eliminate any echo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-dialog-footer">
+          <button class="studio-btn primary" id="btn-guide-confirm">Understood, Let's Mix!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="studio-modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog glass-panel compact">
+        <div class="modal-dialog-header">
+          <div class="modal-headline">
+            <h3>⌨️ Studio Keyboard Shortcuts</h3>
+          </div>
+          <button class="modal-close-btn" id="btn-close-shortcuts">&times;</button>
+        </div>
+        <div class="modal-dialog-body">
+          <div class="shortcuts-grid">
+            <div class="shortcut-row"><kbd>Space</kbd> <span>Toggle Master Broadcast ON / OFF</span></div>
+            <div class="shortcut-row"><kbd>M</kbd> <span>Master Mute / Unmute</span></div>
+            <div class="shortcut-row"><kbd>R</kbd> <span>Refresh &amp; Detect Audio Devices</span></div>
+            <div class="shortcut-row"><kbd>T</kbd> <span>Play Test Chime on All Devices</span></div>
+            <div class="shortcut-row"><kbd>1</kbd>–<kbd>9</kbd> <span>Toggle Channel 1–9 Output</span></div>
+            <div class="shortcut-row"><kbd>Esc</kbd> <span>Close Modals / Clear Solo</span></div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="toast hidden"></div>
+    <div id="studio-toast" class="studio-toast hidden">
+      <div class="toast-indicator"></div>
+      <div class="toast-message" id="toast-message">Notification</div>
+    </div>
+
   </div>
 
   <script src="/static/js/app.js"></script>
