@@ -16,11 +16,30 @@
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </p>
 
+<p align="center">
+  <a href="https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync_Setup.exe">
+    <img src="https://img.shields.io/badge/📥%20Download%20Setup-Windows%2010%20%26%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download SoundSync Setup for Windows 10 & 11">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync.exe">
+    <img src="https://img.shields.io/badge/⚡%20Portable%20EXE-No%20Install-107C41?style=for-the-badge&logo=windows&logoColor=white" alt="Download Portable EXE">
+  </a>
+</p>
+
 ---
 
-<p align="center">
-   
-</p>
+<div align="center">
+
+### 📥 Direct Downloads for Windows 10 & 11 (64-bit)
+
+| Package | Type | Description | Direct Download Link |
+| :--- | :--- | :--- | :--- |
+| **SoundSync Setup** *(Recommended)* | `.exe` Installer (~41.6 MB) | Full setup wizard with Desktop shortcut, Start Menu entry, and folder selection | [**⬇️ Download SoundSync_Setup.exe**](https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync_Setup.exe) |
+| **SoundSync Portable** | Standalone Executable (~30.9 MB) | Single portable executable — runs instantly without installation | [**⬇️ Download SoundSync.exe**](https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync.exe) |
+
+*Fully tested and 100% compatible with Windows 10 & Windows 11 (64-bit).*
+
+</div>
 
 ---
 
