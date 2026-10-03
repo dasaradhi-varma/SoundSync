@@ -19,7 +19,7 @@
 ---
 
 <p align="center">
-  <img src="docs/images/soundsync_showcase.jpg" width="100%" alt="SoundSync Multi-Out Studio Interface" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);">
+   
 </p>
 
 ---
