@@ -3,7 +3,7 @@ title SoundSync Multi-Out
 cd /d "%~dp0"
 echo ========================================================
 echo   SoundSync Multi-Out - Multi-Device Audio Hub
-echo   Simultaneous Multi-Bluetooth & Sound Device Router
+echo   Simultaneous Multi-Bluetooth and Sound Device Router
 echo ========================================================
 echo.
 python run.py

@@ -80,10 +80,10 @@ def main():
         webbrowser.open(url)
 
     print("\n" + "=" * 65)
-    print(" [✓] SoundSync Multi-Out is ACTIVE and READY!")
-    print(f" [✓] Application URL: {url}")
-    print(" [✓] Keep this window open while using multi-device audio.")
-    print(" [✓] To exit, press Ctrl+C in this window.")
+    print(" [OK] SoundSync Multi-Out is ACTIVE and READY!")
+    print(f" [OK] Application URL: {url}")
+    print(" [OK] Keep this console open while using multi-device audio.")
+    print(" [OK] To exit, press Ctrl+C in this window.")
     print("=" * 65 + "\n")
 
     try:
