@@ -3,13 +3,17 @@ SoundSync Multi-Out - Flask Web Server & API
 Provides REST endpoints and Server-Sent Events (SSE) for the frontend mixer UI.
 """
 
+import sys
 import os
 import json
 import time
 from flask import Flask, render_template, request, jsonify, Response
 from audio_engine import audio_engine
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(BASE_DIR, 'templates')
 static_dir = os.path.join(BASE_DIR, 'static')
 
