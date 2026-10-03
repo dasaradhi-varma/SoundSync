@@ -2,27 +2,27 @@
   <img src="docs/images/soundsync_logo.jpg" width="140" alt="SoundSync Multi-Out Logo" style="border-radius: 28px; box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);">
 </p>
 
-<h1 align="center">SoundSync Multi-Out for macOS 🍏🎛️</h1>
+<h1 align="center">SoundSync Multi-Out 🎛️</h1>
 
 <p align="center">
-  <b>Simultaneous Multi-Bluetooth &amp; Multi-AirPods Audio Router with Micro-Delay Latency Sync for macOS</b>
+  <b>Simultaneous Multi-Bluetooth &amp; Multi-Device Audio Router with Micro-Delay Latency Sync for Windows</b>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-macOS%2010.15%2B%20%7C%20Apple%20Silicon%20%26%20Intel-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Platform">
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Platform">
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python Version">
-  <img src="https://img.shields.io/badge/Engine-Core%20Audio%20%2B%20BlackHole-00f2fe?style=for-the-badge" alt="Core Audio">
-  <img src="https://img.shields.io/badge/UI-WebKit%20Desktop%20App-7928CA?style=for-the-badge" alt="WebKit Desktop UI">
+  <img src="https://img.shields.io/badge/Engine-WASAPI%20Loopback-00f2fe?style=for-the-badge" alt="WASAPI Loopback">
+  <img src="https://img.shields.io/badge/UI-WebView2%20Desktop%20App-7928CA?style=for-the-badge" alt="Desktop App UI">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
-  <a href="https://github.com/dasaradhi-varma/SoundSync/raw/mac/dist/SoundSync_macOS.zip">
-    <img src="https://img.shields.io/badge/🍎%20Download%20for%20macOS-SoundSync.app%20(ZIP)-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download SoundSync for macOS">
+  <a href="https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync_Setup.exe">
+    <img src="https://img.shields.io/badge/📥%20Download%20Setup-Windows%2010%20%26%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download SoundSync Setup for Windows 10 & 11">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync_Setup.exe">
-    <img src="https://img.shields.io/badge/🪟%20Windows%20Version-SoundSync_Setup.exe-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download SoundSync for Windows">
+  <a href="https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync.exe">
+    <img src="https://img.shields.io/badge/⚡%20Portable%20EXE-No%20Install-107C41?style=for-the-badge&logo=windows&logoColor=white" alt="Download Portable EXE">
   </a>
 </p>
 
@@ -30,15 +30,14 @@
 
 <div align="center">
 
-### 📥 Direct Downloads for macOS (Apple Silicon & Intel)
+### 📥 Direct Downloads for Windows 10 & 11 (64-bit)
 
-| Package | Format | Compatibility | Direct Download |
+| Package | Type | Description | Direct Download Link |
 | :--- | :--- | :--- | :--- |
-| **SoundSync for macOS** *(Recommended)* | Native `.app` Bundle in `.zip` (~2.3 MB) | macOS 10.15+ (Catalina, Big Sur, Monterey, Ventura, Sonoma, Sequoia) — Apple Silicon (M1/M2/M3/M4) & Intel | [**⬇️ Download SoundSync_macOS.zip**](https://github.com/dasaradhi-varma/SoundSync/raw/mac/dist/SoundSync_macOS.zip) |
-| **macOS 1-Click Terminal Installer** | Bash script (`install_mac.sh`) | Installs dependencies, sets up BlackHole 2ch, and creates `/Applications/SoundSync.app` | [**⬇️ Download install_mac.sh**](https://github.com/dasaradhi-varma/SoundSync/raw/mac/scripts/install_mac.sh) |
-| **Windows 10 & 11 Setup** | Standalone `.exe` Installer (~41.6 MB) | Windows 10 & 11 (64-bit) | [**⬇️ Download SoundSync_Setup.exe**](https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync_Setup.exe) |
+| **SoundSync Setup** *(Recommended)* | `.exe` Installer (~41.6 MB) | Full setup wizard with Desktop shortcut, Start Menu entry, and folder selection | [**⬇️ Download SoundSync_Setup.exe**](https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync_Setup.exe) |
+| **SoundSync Portable** | Standalone Executable (~30.9 MB) | Single portable executable — runs instantly without installation | [**⬇️ Download SoundSync.exe**](https://github.com/dasaradhi-varma/SoundSync/raw/main/dist/SoundSync.exe) |
 
-*Author: Created by Dasaradhi Varma.*
+*Fully tested and 100% compatible with Windows 10 & Windows 11 (64-bit).*
 
 </div>
 
@@ -123,65 +122,29 @@ flowchart TD
 
 ---
 
-## 🍏 Quick Start for macOS
+## 🚀 Quick Start & Launch Options
 
-### Option 1: Double-Click SoundSync.app *(Recommended)*
-1. Download [**`SoundSync_macOS.zip`**](https://github.com/dasaradhi-varma/SoundSync/raw/mac/dist/SoundSync_macOS.zip).
-2. Double-click to extract **`SoundSync.app`**.
-3. Drag **`SoundSync.app`** into your **`/Applications`** folder.
-4. Double-click **`SoundSync.app`** to launch!
-
-### Option 2: 1-Click Terminal Setup (`scripts/install_mac.sh`)
-```bash
-chmod +x scripts/install_mac.sh
-./scripts/install_mac.sh
-```
-Installs dependencies, configures BlackHole 2ch, builds `SoundSync.app`, and creates your Desktop shortcut.
-
-### Option 3: Graphical Setup Wizard (`src/installer_mac.py`)
-Run the interactive macOS installation wizard created by **Dasaradhi Varma**:
-```bash
-python3 src/installer_mac.py
-```
-- Custom destination directory selection with **Browse...** button (default: `/Applications/SoundSync.app`).
-- Prominently showcases author credit: **Created by Dasaradhi Varma**.
-- Automatically creates Desktop and Dock shortcuts.
-
-### Option 4: Direct Shell Launcher (`scripts/run_mac.sh`)
-```bash
-chmod +x scripts/run_mac.sh
-./scripts/run_mac.sh
-```
-
----
-
-## 🎧 Capturing macOS System Audio (BlackHole Setup)
-
-macOS CoreAudio requires a virtual loopback device to capture system audio (YouTube, Spotify, Apple Music, Netflix) and duplicate it to multiple AirPods or Bluetooth headsets.
-
-1. **Install BlackHole 2ch** (free & open source):
-   ```bash
-   brew install blackhole-2ch
-   ```
-   *(Or download the `.pkg` installer from [Existential Audio](https://existential.audio/blackhole/))*
-2. In macOS **System Settings** → **Sound** (or the Menu Bar sound icon), select **BlackHole 2ch** as your Output device.
-3. Open **SoundSync Multi-Out**. It automatically attaches to BlackHole 2ch as your master capture stream!
-4. Connect all your AirPods / Bluetooth headphones / speakers, and click **START BROADCASTING**.
-5. Adjust each device's volume and delay compensation sliders for seamless, zero-echo listening!
-
----
-
-## 🪟 Windows Quick Start & Launch Options
-
-### Option 1: Windows Setup Installer
+### Option 1: Windows Setup Installer *(Recommended)*
 Run [**`dist\SoundSync_Setup.exe`**](dist/SoundSync_Setup.exe). A complete Windows Setup Wizard created by **Dasaradhi Varma**. Features:
 - Destination folder selection with **Browse...** button (default: `C:\Program Files\SoundSync Multi-Out`).
 - Prominently showcases author credit: **Created by Dasaradhi Varma**.
 - Automated Desktop and Start Menu shortcut creation.
 - Instant 1-click launch upon completion.
 
-### Option 2: Standalone Portable Executable
+### Option 2: Desktop Shortcut
+Double-click the **`SoundSync Multi-Out`** shortcut directly on your Windows Desktop. It launches silently as a native app with no terminal window.
+
+### Option 3: Standalone Portable Executable
 Double-click [**`dist\SoundSync.exe`**](dist/SoundSync.exe). A completely self-contained 32 MB binary that runs portably with zero installation.
+
+### Option 4: Silent Launcher (`launch_app.vbs`)
+Double-click [**`launch_app.vbs`**](launch_app.vbs). Launches the application window in the background without a command prompt window.
+
+### Option 5: Batch Launcher (`start.bat`)
+Double-click [**`start.bat`**](start.bat) to launch the server and desktop window with terminal logging.
+
+### Option 6: Native Tkinter Desktop GUI
+Double-click [**`start_gui.bat`**](start_gui.bat) for the lightweight offline Tkinter GUI fallback.
 
 ---
 

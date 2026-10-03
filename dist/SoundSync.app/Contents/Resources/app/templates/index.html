@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSync Multi-Out | Pro Audio Hub</title>
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="studio-dark">
+  <div class="app-shell">
+    
+    <!-- Top Studio Navbar -->
+    <header class="studio-nav">
+      <div class="nav-left">
+        <div class="logo-box">
+          <div class="logo-icon-pulse">
+            <span class="pulse-ring"></span>
+            <span class="bar b1"></span>
+            <span class="bar b2"></span>
+            <span class="bar b3"></span>
+            <span class="bar b4"></span>
+          </div>
+          <div class="logo-text">
+            <div class="brand-title">SOUND<span class="highlight">SYNC</span> <span class="tag-pro">MULTI-OUT</span></div>
+            <div class="brand-sub">Multi-Bluetooth &amp; Sound Endpoint Matrix</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Sound Presets -->
+      <div class="nav-center">
+        <div class="presets-bar" title="Quick Audio Routing Presets">
+          <span class="presets-label">PRESETS:</span>
+          <button class="preset-chip active" data-preset="party" title="Broadcast to all 3 devices at 100% volume">
+            <span class="chip-icon">🎧</span> Tri-Party
+          </button>
+          <button class="preset-chip" data-preset="cinema" title="Optimized latency sync for movie watching">
+            <span class="chip-icon">🎬</span> Cinema Sync
+          </button>
+          <button class="preset-chip" data-preset="balanced" title="Balanced 85% volume across all devices">
+            <span class="chip-icon">⚖️</span> Balanced
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <button id="btn-refresh" class="nav-btn" title="Rescan Windows audio & Bluetooth devices [Shortcut: R]">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          <span>Refresh</span>
+          <kbd class="kbd-hint">R</kbd>
+        </button>
+
+        <button id="btn-test-all" class="nav-btn" title="Play test harmonic chime across all active devices [Shortcut: T]">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <span>Test All</span>
+          <kbd class="kbd-hint">T</kbd>
+        </button>
+
+        <button id="btn-shortcuts" class="nav-btn icon-only" title="Keyboard Shortcuts">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+        </button>
+
+        <button id="btn-help" class="nav-btn primary-tint" title="How to pair 3 Bluetooth devices to Windows">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.65z"/></svg>
+          <span>Bluetooth Guide</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <main class="studio-main">
+      
+      <!-- HERO MASTER CONSOLE -->
+      <section class="master-console-panel glass-panel">
+        <div class="console-glow-line"></div>
+        
+        <div class="console-layout">
+          <!-- Left: Big Broadcast Controller & Status -->
+          <div class="broadcast-trigger-col">
+            <div class="status-indicator-pill" id="broadcast-pill">
+              <span class="status-dot"></span>
+              <span class="status-text" id="status-pill-text">READY TO BROADCAST</span>
+            </div>
+
+            <button id="btn-toggle-broadcast" class="master-power-btn" title="Toggle audio broadcast to all devices [Shortcut: Space]">
+              <div class="power-ring-outer"></div>
+              <div class="power-ring-inner"></div>
+              <div class="power-btn-content">
+                <svg class="power-svg" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
+                <span id="broadcast-btn-label">START BROADCAST</span>
+                <span class="power-shortcut-hint">SPACEBAR</span>
+              </div>
+            </button>
+
+            <!-- Mode Selector -->
+            <div class="routing-mode-switch">
+              <button class="mode-tab active" data-mode="mirror" title="Default device plays natively with zero latency; duplicates to Bluetooth 2, 3...">
+                Smart Mirror
+              </button>
+              <button class="mode-tab" data-mode="all" title="Streams software audio to all devices simultaneously">
+                Multi-Direct
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: 20-Band Dynamic Audio Spectrum Visualizer -->
+          <div class="spectrum-visualizer-col">
+            <div class="col-header">
+              <div class="col-title-group">
+                <span class="section-tag">SPECTRUM RACK</span>
+                <h4>Real-Time Audio Spectrum (WASAPI Digital Capture)</h4>
+              </div>
+              <div class="source-badge" id="source-badge">
+                <span class="source-indicator">●</span>
+                <span class="source-label-txt">SOURCE:</span>
+                <select id="source-select" class="source-select-dropdown" title="Select audio line / device to capture from">
+                  <option value="auto">Auto: Windows Default</option>
+                </select>
+                <span class="source-format" id="source-format-txt">48kHz / 32-bit</span>
+              </div>
+            </div>
+
+            <!-- Canvas Spectrum Bars -->
+            <div class="spectrum-canvas-wrap">
+              <canvas id="spectrum-canvas" width="600" height="110"></canvas>
+              <div class="spectrum-freq-axis">
+                <span>40Hz</span>
+                <span>120Hz</span>
+                <span>250Hz</span>
+                <span>500Hz</span>
+                <span>1kHz</span>
+                <span>2kHz</span>
+                <span>4kHz</span>
+                <span>8kHz</span>
+                <span>16kHz</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Master Gain & Stereo Peak Meters -->
+          <div class="master-gain-col">
+            <div class="col-header">
+              <span class="section-tag">MASTER GAIN</span>
+              <span class="gain-numeric" id="master-gain-num">100%</span>
+            </div>
+
+            <div class="gain-meters-row">
+              <!-- Dual Peak Stereo Meter -->
+              <div class="stereo-peak-meter" title="Master Left & Right Peak Audio Meter">
+                <div class="peak-channel">
+                  <div class="channel-label">L</div>
+                  <div class="channel-track">
+                    <div class="channel-fill" id="meter-left-fill"></div>
+                    <div class="peak-marker" id="meter-left-peak"></div>
+                  </div>
+                </div>
+                <div class="peak-channel">
+                  <div class="channel-label">R</div>
+                  <div class="channel-track">
+                    <div class="channel-fill" id="meter-right-fill"></div>
+                    <div class="peak-marker" id="meter-right-peak"></div>
+                  </div>
+                </div>
+                <div class="db-labels">
+                  <span>+3</span>
+                  <span>0</span>
+                  <span>-6</span>
+                  <span>-18</span>
+                  <span>-36</span>
+                  <span>-inf</span>
+                </div>
+              </div>
+
+              <!-- Master Fader Slider -->
+              <div class="master-slider-wrap">
+                <div class="fader-track-glow">
+                  <input type="range" id="master-volume-slider" min="0" max="150" value="100" class="pro-fader" orient="vertical">
+                </div>
+                <div class="master-action-btns">
+                  <button id="btn-master-mute" class="tool-btn mute-btn" title="Master Mute [M]">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                    MUTE
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gain Preset Taps -->
+            <div class="quick-gain-row">
+              <button class="gain-tap" data-vol="0">0%</button>
+              <button class="gain-tap" data-vol="50">50%</button>
+              <button class="gain-tap active" data-vol="100">100%</button>
+              <button class="gain-tap" data-vol="125">125%</button>
+              <button class="gain-tap boost" data-vol="150">+3dB</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEVICES MATRIX SECTION -->
+      <section class="devices-matrix-section">
+        <div class="matrix-header">
+          <div class="matrix-title-wrap">
+            <div class="title-row">
+              <h3>Output Channel Strips</h3>
+              <span class="device-count-pill" id="device-count-pill">3 Outputs Active</span>
+            </div>
+            <p class="matrix-subtitle">Control independent volume, micro-delay wireless sync, and stereo pan for each connected device</p>
+          </div>
+
+          <div class="solo-active-alert hidden" id="solo-alert-banner">
+            <span class="solo-alert-icon">⚡</span>
+            <span>SOLO MODE ACTIVE: Audio routed exclusively to isolated channel</span>
+            <button id="btn-clear-solo" class="btn-clear-solo">CLEAR SOLO</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Mixer Channel Strips -->
+        <div class="channel-strips-grid" id="channels-container">
+          <!-- Dynamically populated via app.js -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bluetooth Setup Guide Modal -->
+    <div id="guide-modal" class="studio-modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog glass-panel">
+        <div class="modal-dialog-header">
+          <div class="modal-headline">
+            <div class="bt-glyph-box">ᛒ</div>
+            <div>
+              <h3>How to Connect 3 Bluetooth Devices on Windows</h3>
+              <p class="modal-sub">Step-by-step wireless audio routing guide</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-guide">&times;</button>
+        </div>
+
+        <div class="modal-dialog-body">
+          <div class="guide-steps-list">
+            <div class="guide-step-card">
+              <div class="step-badge">1</div>
+              <div class="step-content">
+                <h5>Pair 1st Bluetooth Headphones</h5>
+                <p>Press <kbd>Win</kbd> + <kbd>I</kbd> to open Windows Settings ➔ <strong>Bluetooth &amp; devices</strong>. Put your first earbuds/headphones into pairing mode, click <strong>Add device</strong>, and connect.</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card">
+              <div class="step-badge">2</div>
+              <div class="step-content">
+                <h5>Pair 2nd Bluetooth Headphones / Speaker</h5>
+                <p>Put your second Bluetooth device into pairing mode. Click <strong>Add device</strong> again and connect. Windows keeps both active!</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card">
+              <div class="step-badge">3</div>
+              <div class="step-content">
+                <h5>Pair 3rd Bluetooth Device</h5>
+                <p>Put your third Bluetooth headphones into pairing mode and connect. Windows will show all 3 devices connected simultaneously.</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card highlight-step">
+              <div class="step-badge">4</div>
+              <div class="step-content">
+                <h5>Click "Refresh" &amp; "Start Broadcast" in SoundSync</h5>
+                <p>Click <strong>Refresh</strong> in SoundSync Multi-Out. All 3 devices will show up with Bluetooth badges. Enable them and press <strong>START BROADCAST</strong>!</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card">
+              <div class="step-badge">5</div>
+              <div class="step-content">
+                <h5>Calibrate Wireless Latency Sync</h5>
+                <p>Different Bluetooth brands (AirPods, boAt, OnePlus, Sony) have different wireless latencies. Use the <strong>Sync Delay slider</strong> on each channel to eliminate any echo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-dialog-footer">
+          <button class="studio-btn primary" id="btn-guide-confirm">Understood, Let's Mix!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="studio-modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog glass-panel compact">
+        <div class="modal-dialog-header">
+          <div class="modal-headline">
+            <h3>⌨️ Studio Keyboard Shortcuts</h3>
+          </div>
+          <button class="modal-close-btn" id="btn-close-shortcuts">&times;</button>
+        </div>
+        <div class="modal-dialog-body">
+          <div class="shortcuts-grid">
+            <div class="shortcut-row"><kbd>Space</kbd> <span>Toggle Master Broadcast ON / OFF</span></div>
+            <div class="shortcut-row"><kbd>M</kbd> <span>Master Mute / Unmute</span></div>
+            <div class="shortcut-row"><kbd>R</kbd> <span>Refresh &amp; Detect Audio Devices</span></div>
+            <div class="shortcut-row"><kbd>T</kbd> <span>Play Test Chime on All Devices</span></div>
+            <div class="shortcut-row"><kbd>1</kbd>–<kbd>9</kbd> <span>Toggle Channel 1–9 Output</span></div>
+            <div class="shortcut-row"><kbd>Esc</kbd> <span>Close Modals / Clear Solo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="studio-toast" class="studio-toast hidden">
+      <div class="toast-indicator"></div>
+      <div class="toast-message" id="toast-message">Notification</div>
+    </div>
+
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
