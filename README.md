@@ -105,19 +105,26 @@ flowchart TD
 
 ## 🚀 Quick Start & Launch Options
 
-### Option 1: Desktop Shortcut *(Easiest & Cleanest)*
+### Option 1: Windows Setup Installer *(Recommended)*
+Run [**`dist\SoundSync_Setup.exe`**](dist/SoundSync_Setup.exe). A complete Windows Setup Wizard created by **Dasaradhi Varma**. Features:
+- Destination folder selection with **Browse...** button (default: `C:\Program Files\SoundSync Multi-Out`).
+- Prominently showcases author credit: **Created by Dasaradhi Varma**.
+- Automated Desktop and Start Menu shortcut creation.
+- Instant 1-click launch upon completion.
+
+### Option 2: Desktop Shortcut
 Double-click the **`SoundSync Multi-Out`** shortcut directly on your Windows Desktop. It launches silently as a native app with no terminal window.
 
-### Option 2: Standalone Compiled Executable
-Double-click [**`dist\SoundSync.exe`**](dist/SoundSync.exe). A completely self-contained 32 MB binary that requires zero setup.
+### Option 3: Standalone Portable Executable
+Double-click [**`dist\SoundSync.exe`**](dist/SoundSync.exe). A completely self-contained 32 MB binary that runs portably with zero installation.
 
-### Option 3: Silent Launcher (`launch_app.vbs`)
+### Option 4: Silent Launcher (`launch_app.vbs`)
 Double-click [**`launch_app.vbs`**](launch_app.vbs). Launches the application window in the background without a command prompt window.
 
-### Option 4: Batch Launcher (`start.bat`)
+### Option 5: Batch Launcher (`start.bat`)
 Double-click [**`start.bat`**](start.bat) to launch the server and desktop window with terminal logging.
 
-### Option 5: Native Tkinter Desktop GUI
+### Option 6: Native Tkinter Desktop GUI
 Double-click [**`start_gui.bat`**](start_gui.bat) for the lightweight offline Tkinter GUI fallback.
 
 ---
@@ -196,13 +203,16 @@ sound/
 │       ├── soundsync_logo.jpg        # High-res app logo
 │       └── soundsync_showcase.jpg    # Application UI showcase banner
 ├── scripts/                          # Utility & build automation scripts
+│   ├── build_installer.bat           # 1-click Windows Setup installer builder
+│   ├── build_exe.bat                 # Standalone PyInstaller EXE compiler
+│   ├── installer.iss                 # Inno Setup script (Created by Dasaradhi Varma)
 │   ├── create_desktop_shortcut.bat   # 1-click desktop shortcut generator
-│   ├── create_shortcut.ps1           # PowerShell shortcut helper
-│   └── build_exe.bat                 # Standalone PyInstaller EXE compiler
+│   └── create_shortcut.ps1           # PowerShell shortcut helper
 ├── src/                              # Core Python engine & backend package
 │   ├── __init__.py                   # Package initialization
 │   ├── audio_engine.py               # WASAPI loopback, circular delay & workers
 │   ├── server.py                     # Flask REST API & SSE meter stream
+│   ├── installer.py                  # Setup wizard with folder browser & author credit
 │   └── gui_tkinter.py                # Standalone native Tkinter GUI fallback
 ├── static/                           # Web & desktop assets
 │   ├── css/
@@ -214,8 +224,9 @@ sound/
 │   └── manifest.json                 # Progressive Web App manifest
 ├── templates/
 │   └── index.html                    # Pro Studio DAW mixer interface
-├── dist/                             # Compiled standalone executable
-│   └── SoundSync.exe                 # Ready-to-use 32 MB binary
+├── dist/                             # Compiled standalone binaries
+│   ├── SoundSync_Setup.exe           # Official Windows Setup Wizard (Created by Dasaradhi Varma)
+│   └── SoundSync.exe                 # Standalone portable application (32 MB)
 ├── app_icon.ico                      # Windows application icon
 ├── launch_app.vbs                    # Silent windowless app launcher
 ├── requirements.txt                  # Python dependencies
