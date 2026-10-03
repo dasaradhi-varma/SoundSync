@@ -12,10 +12,18 @@ import webbrowser
 import argparse
 import urllib.request
 
-from server import app
-from audio_engine import audio_engine
-
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.join(APP_DIR, "src")
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
+try:
+    from src.server import app
+    from src.audio_engine import audio_engine
+except ImportError:
+    from server import app
+    from audio_engine import audio_engine
+
 ICON_PATH = os.path.join(APP_DIR, "app_icon.ico")
 
 def find_browser_app_executable():
@@ -83,7 +91,10 @@ def main():
 
     if args.gui:
         print("[*] Launching SoundSync Native Tkinter GUI...")
-        from gui_tkinter import run_tkinter
+        try:
+            from src.gui_tkinter import run_tkinter
+        except ImportError:
+            from gui_tkinter import run_tkinter
         run_tkinter()
         return
 

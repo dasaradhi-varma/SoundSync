@@ -1,6 +1,6 @@
 @echo off
 title Build SoundSync Standalone Windows Executable
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo ========================================================
 echo   SoundSync Multi-Out - Standalone EXE Builder
@@ -13,6 +13,7 @@ python -m PyInstaller --noconsole --onefile ^
     --icon "app_icon.ico" ^
     --add-data "templates;templates" ^
     --add-data "static;static" ^
+    --add-data "src;src" ^
     --add-data "app_icon.ico;." ^
     run.py
 

@@ -9,7 +9,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import time
-from audio_engine import audio_engine
+try:
+    from .audio_engine import audio_engine
+except ImportError:
+    from audio_engine import audio_engine
 
 class SoundSyncTkinterApp(tk.Tk):
     def __init__(self):

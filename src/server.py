@@ -8,12 +8,15 @@ import os
 import json
 import time
 from flask import Flask, render_template, request, jsonify, Response
-from audio_engine import audio_engine
+try:
+    from .audio_engine import audio_engine
+except ImportError:
+    from audio_engine import audio_engine
 
 if getattr(sys, 'frozen', False):
-    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 template_dir = os.path.join(BASE_DIR, 'templates')
 static_dir = os.path.join(BASE_DIR, 'static')
 

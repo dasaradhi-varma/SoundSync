@@ -141,7 +141,7 @@ pip install -r requirements.txt
 
 ### 3. Create Desktop Shortcut (Optional)
 ```bash
-create_desktop_shortcut.bat
+scripts\create_desktop_shortcut.bat
 ```
 
 ### 4. Run the Application
@@ -181,7 +181,7 @@ SoundSync includes built-in one-tap routing presets in the top navigation bar:
 You can compile the entire application into a single standalone `.exe` using the bundled builder:
 
 ```bash
-build_exe.bat
+scripts\build_exe.bat
 ```
 The compiled executable will be placed in `dist\SoundSync.exe`.
 
@@ -191,31 +191,37 @@ The compiled executable will be placed in `dist\SoundSync.exe`.
 
 ```
 sound/
-├── docs/
+├── docs/                             # Documentation assets & design showcase
 │   └── images/
 │       ├── soundsync_logo.jpg        # High-res app logo
 │       └── soundsync_showcase.jpg    # Application UI showcase banner
-├── static/
+├── scripts/                          # Utility & build automation scripts
+│   ├── create_desktop_shortcut.bat   # 1-click desktop shortcut generator
+│   ├── create_shortcut.ps1           # PowerShell shortcut helper
+│   └── build_exe.bat                 # Standalone PyInstaller EXE compiler
+├── src/                              # Core Python engine & backend package
+│   ├── __init__.py                   # Package initialization
+│   ├── audio_engine.py               # WASAPI loopback, circular delay & workers
+│   ├── server.py                     # Flask REST API & SSE meter stream
+│   └── gui_tkinter.py                # Standalone native Tkinter GUI fallback
+├── static/                           # Web & desktop assets
 │   ├── css/
 │   │   └── style.css                 # Pro Studio DAW design system
 │   ├── js/
 │   │   └── app.js                    # Mixer controls, SSE meter stream & physics
-│   ├── icons/                        # PWA maskable icons (192px, 512px)
+│   ├── icons/                        # PWA maskable icons (192px, 512px, app_logo)
 │   ├── favicon.ico                   # Multi-resolution app icon
 │   └── manifest.json                 # Progressive Web App manifest
 ├── templates/
 │   └── index.html                    # Pro Studio DAW mixer interface
-├── audio_engine.py                   # WASAPI loopback, circular delay & workers
-├── server.py                         # Flask REST API & SSE meter stream
-├── run.py                            # Universal desktop launcher (WebView2)
-├── gui_tkinter.py                    # Standalone native Tkinter GUI fallback
+├── dist/                             # Compiled standalone executable
+│   └── SoundSync.exe                 # Ready-to-use 32 MB binary
+├── app_icon.ico                      # Windows application icon
 ├── launch_app.vbs                    # Silent windowless app launcher
+├── requirements.txt                  # Python dependencies
+├── run.py                            # Universal desktop launcher (WebView2)
 ├── start.bat                         # 1-click batch launcher
 ├── start_gui.bat                     # 1-click Tkinter launcher
-├── create_desktop_shortcut.bat       # Desktop shortcut generator
-├── build_exe.bat                     # Standalone PyInstaller EXE compiler
-├── app_icon.ico                      # Windows application icon
-├── requirements.txt                  # Python dependencies
 └── README.md                         # Documentation
 ```
 
